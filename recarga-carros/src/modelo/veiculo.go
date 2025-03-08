@@ -1,4 +1,4 @@
-package api
+package modelo
 
 // definir rotas para: consulta de pontos de recarga disponíveis;
 // reserva de pontos de recarga;
@@ -7,7 +7,19 @@ package api
 import (
 	"fmt"
 	"net"
+	"sync"
 )
+
+type Vehicle struct {
+	ID         string
+	Latitude   float64
+	Longitude  float64
+	Bateria    float64
+	mu         sync.Mutex
+	IsCharging bool
+}
+
+
 
 func Route() {
 	conn, err := net.Dial("tcp", "localhost:8080")
