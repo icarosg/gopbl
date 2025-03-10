@@ -2,7 +2,6 @@ package modelo
 
 import (
 	"fmt"
-	"slices"
 	"sync"
 )
 
@@ -57,7 +56,7 @@ func LiberarVaga(p *Posto) {
 			if p.Fila[i].Latitude == p.Latitude && p.Fila[i].Longitude == p.Longitude {
 				carregarBateriaVeiculo := p.Fila[i]
 
-				p.Fila = slices.Delete(p.Fila, i, i+1) // remove o veículo da fila; índice do primeiro elemento a ser removido e índice após o último elemento a ser removido
+				p.Fila = append(p.Fila[:i], p.Fila[i+1:]...) // remove o veículo da fila; índice do primeiro elemento a ser removido e índice após o último elemento a ser removido
 
 				CarregarBateria(carregarBateriaVeiculo)
 				fmt.Printf("Posto %s: Veículo %s removido da fila e iniciando carregamento\n", p.ID, carregarBateriaVeiculo.ID)
