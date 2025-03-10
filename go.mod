@@ -1,3 +1,3 @@
-module github.com/icarosg/gopbl
+module gopbl
 
 go 1.18

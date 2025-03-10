@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/icarosg/gopbl/modelo"
+	"gopbl/modelo"
 )
 
 func main() {
