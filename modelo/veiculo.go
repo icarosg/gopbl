@@ -18,7 +18,7 @@ type Veiculo struct {
 	IsCarregando bool
 }
 
-func NovoVeiculo(id string, inicialLat, inicialLong float64) Veiculo {
+func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
 	return Veiculo{
 		ID:        id,
 		Latitude:  inicialLat,
@@ -29,7 +29,7 @@ func NovoVeiculo(id string, inicialLat, inicialLong float64) Veiculo {
 
 func AtualizarLocalizacao(v *Veiculo) {
 	v.mu.Lock()
-	defer v.mu.Unlock() //o defer, garante que a liberação do bloqueio ocorra de maneira segura e sempre que a função terminar sua execução
+	defer v.mu.Unlock() //o defer garante que a liberação do bloqueio ocorra de maneira segura e sempre que a função terminar sua execução
 
 	v.Latitude += (rand.Float64() - 0.5) * 0.001
 	v.Longitude += (rand.Float64() - 0.5) * 0.001
