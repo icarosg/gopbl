@@ -4,7 +4,8 @@ WORKDIR /src
 
 # copiado para dentro de src
 COPY go.mod ./
-COPY main.go ./
+
+COPY . .
 
 RUN go build -o /server
 
