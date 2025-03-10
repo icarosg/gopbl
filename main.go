@@ -6,7 +6,10 @@ import (
 )
 
 func main() {
-	novoVeiculo := modelo.NovoVeiculo("tesla", 200, 240);
+	novoVeiculo := modelo.NovoVeiculo("tesla", 200, 240)
+	
+	novoPosto := modelo.NovoPosto("Ipiranga", 300, 500)
 
-	fmt.Println("Veiculo criado: ", novoVeiculo);
+	fmt.Println("\nVeiculo criado: ", novoVeiculo)
+	fmt.Println("Posto criado:", novoPosto)
 }

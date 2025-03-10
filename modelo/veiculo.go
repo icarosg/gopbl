@@ -35,7 +35,7 @@ func AtualizarLocalizacao(v *Veiculo) {
 	v.Longitude += (rand.Float64() - 0.5) * 0.001
 }
 
-func UpdateBAtattery(v *Veiculo) {
+func DiminuirNivelBateria(v *Veiculo) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 

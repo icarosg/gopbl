@@ -16,7 +16,7 @@ type Posto struct {
 }
 
 func NovoPosto(id string, lat float64, long float64) Posto {
-	fmt.Printf("Posto %s criado na localização em (%.6f, %.6f)",
+	fmt.Printf("Posto %s criado na localização (%.6f, %.6f)",
 		id, lat, long)
 
 	return Posto{
