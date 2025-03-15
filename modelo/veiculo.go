@@ -6,7 +6,7 @@ package modelo
 
 import (
 	"math/rand"
-	"sync"
+	"sync"	
 )
 
 type Veiculo struct {
@@ -24,6 +24,7 @@ func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
 		Latitude:  inicialLat,
 		Longitude: inicialLong,
 		Bateria:   100.0, // começa com bateria cheia
+		IsCarregando: false,
 	}
 }
 
@@ -62,17 +63,10 @@ func GetLocalizacaoVeiculo(v *Veiculo) (float64, float64) {
 	return v.Latitude, v.Longitude
 }
 
-func CarregarBateria(v *Veiculo) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
+// func CarregarBateria(v *Veiculo) {
+// 	v.mu.Lock()
+// 	defer v.mu.Unlock()
 
-	v.IsCarregando = true
-}
+// 	v.IsCarregando = true
+// }
 
-func PararCarregamentoBateria(v *Veiculo) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
-
-	v.IsCarregando = false
-	v.Bateria = 100.0
-}
