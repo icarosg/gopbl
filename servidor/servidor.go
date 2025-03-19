@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"sync"
@@ -27,7 +28,7 @@ func main() {
 		conexao, erro := listener.Accept()
 
 		if erro != nil {
-			fmt.Println("Erro ao conectao o cliente", erro)
+			fmt.Println("Erro ao conectar o cliente", erro)
 			continue // continua aguardando outras conexões
 		}
 
@@ -50,6 +51,18 @@ func cliente(conexao net.Conn) {
 
 		conexao.Close()
 	}() // decrementa após a conexão ser encerrada
+
+	buffer := make([]byte, 1024)
+	for {
+		_, erro := conexao.Read(buffer)
+		if erro != nil {
+			if erro == io.EOF {
+				fmt.Printf("O cliente %s fechou a conexão\n", conexao.RemoteAddr())
+			}
+
+			break
+		}
+	}
 }
 
 func incrementar() {
