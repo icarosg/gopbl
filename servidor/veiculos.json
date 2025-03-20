@@ -1,0 +1,9 @@
+[
+    {
+        "ID": "1",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    }
+]

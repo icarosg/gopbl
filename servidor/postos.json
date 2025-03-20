@@ -1,0 +1,18 @@
+[
+    {
+        "ID": "posto1",
+        "Latitude": 800,
+        "Longitude": 100,
+        "Fila": null,
+        "QtdFila": 10,
+        "BombaOcupada": true
+    },
+    {
+        "ID": "posto2",
+        "Latitude": 500,
+        "Longitude": 100,
+        "Fila": null,
+        "QtdFila": 10,
+        "BombaOcupada": true
+    }
+]

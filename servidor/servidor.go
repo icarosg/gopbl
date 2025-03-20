@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 	"sync"
+	"net/http"
+	"log"
 )
 
 var (
@@ -14,7 +16,15 @@ var (
 )
 
 func main() {
-	// cria um listener TCP na porta 8080
+	// Inicializa os postos
+	inicializar()
+
+	// Configura as rotas HTTP
+	http.HandleFunc("/posto", handler)
+	http.HandleFunc("/listar", ListarPostos)
+	http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
+
+	// Cria um listener TCP na porta 8080
 	listener, erro := net.Listen("tcp", "localhost:8080")
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
@@ -24,33 +34,33 @@ func main() {
 
 	fmt.Println("Servidor iniciado em localhost:8080")
 
+	// Inicia o servidor HTTP no listener TCP
+	go func() {
+		log.Fatal(http.Serve(listener, nil))
+	}()
+
+	// Mantém o servidor principal em execução
 	for {
 		conexao, erro := listener.Accept()
-
 		if erro != nil {
 			fmt.Println("Erro ao conectar o cliente", erro)
-			continue // continua aguardando outras conexões
+			continue
 		}
 
 		incrementar()
-
 		fmt.Println("Cliente conectado à porta:", conexao.RemoteAddr())
 		fmt.Println("Total de clientes conectados:", getQtdClientes())
 
 		go cliente(conexao)
 	}
-
 }
 
 func cliente(conexao net.Conn) {
 	defer func() {
-
 		decrementar()
-
 		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
-
 		conexao.Close()
-	}() // decrementa após a conexão ser encerrada
+	}()
 
 	buffer := make([]byte, 1024)
 	for {
@@ -59,7 +69,6 @@ func cliente(conexao net.Conn) {
 			if erro == io.EOF {
 				fmt.Printf("O cliente %s fechou a conexão\n", conexao.RemoteAddr())
 			}
-
 			break
 		}
 	}
