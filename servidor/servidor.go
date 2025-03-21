@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"net"
+	"net/http"
 	"os"
 	"sync"
 )
@@ -14,54 +13,41 @@ var (
 )
 
 func main() {
-	// cria um listener TCP na porta 8080
-	listener, erro := net.Listen("tcp", "localhost:8080")
+	http.HandleFunc("/conectar", conexao)
+	http.HandleFunc("/desconectar", desconectar)
+
+	fmt.Println("Servidor HTTP iniciado em http://localhost:8080")
+	erro := http.ListenAndServe("localhost:8080", nil)
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
 		os.Exit(1)
 	}
-	defer listener.Close()
-
-	fmt.Println("Servidor iniciado em localhost:8080")
-
-	for {
-		conexao, erro := listener.Accept()
-
-		if erro != nil {
-			fmt.Println("Erro ao conectar o cliente", erro)
-			continue // continua aguardando outras conexões
-		}
-
-		incrementar()
-
-		fmt.Println("Cliente conectado à porta:", conexao.RemoteAddr())
-		fmt.Println("Total de clientes conectados:", getQtdClientes())
-
-		go cliente(conexao)
-	}
-
 }
 
-func cliente(conexao net.Conn) {
-	defer func() {
+func conexao(w http.ResponseWriter, r *http.Request) {
+	incrementar()
 
-		decrementar()
+	// exibe em qual porta o cliente foi conectado
+	fmt.Println("Cliente conectado:", r.RemoteAddr)
+	fmt.Println("Total de clientes conectados:", getQtdClientes())
 
-		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
+	// responde o cliente
+	_, erro := fmt.Fprintf(w, "Conectado ao servidor! Total de clientes conectados: %d", getQtdClientes())
+	if erro != nil {
+		fmt.Println("Erro ao responder ao cliente:", erro)
+	}
+}
 
-		conexao.Close()
-	}() // decrementa após a conexão ser encerrada
+func desconectar(w http.ResponseWriter, r *http.Request) {
+	decrementar()
 
-	buffer := make([]byte, 1024)
-	for {
-		_, erro := conexao.Read(buffer)
-		if erro != nil {
-			if erro == io.EOF {
-				fmt.Printf("O cliente %s fechou a conexão\n", conexao.RemoteAddr())
-			}
+	fmt.Println("Cliente desconectado:", r.RemoteAddr)
+	fmt.Println("Total de clientes conectados:", getQtdClientes())
 
-			break
-		}
+	// responde o cliente
+	_, erro := fmt.Fprintf(w, "Desconectado do servidor! Total de clientes conectados: %d", getQtdClientes())
+	if erro != nil {
+		fmt.Println("Erro ao responder ao cliente:", erro)
 	}
 }
 
