@@ -5,40 +5,39 @@ package modelo
 // registro de recargas realizadas.
 
 import (
+	"fmt"
 	"math/rand"
-	"sync"	
 )
 
 type Veiculo struct {
-	ID         string
-	Latitude   float64
-	Longitude  float64
-	Bateria    float64
-	mu         sync.Mutex
+	ID           string
+	Latitude     float64
+	Longitude    float64
+	Bateria      float64
 	IsCarregando bool
 }
 
 func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
 	return Veiculo{
-		ID:        id,
-		Latitude:  inicialLat,
-		Longitude: inicialLong,
-		Bateria:   100.0, // começa com bateria cheia
+		ID:           id,
+		Latitude:     inicialLat,
+		Longitude:    inicialLong,
+		Bateria:      100.0, // começa com bateria cheia
 		IsCarregando: false,
 	}
 }
 
 func AtualizarLocalizacao(v *Veiculo) {
-	v.mu.Lock()
-	defer v.mu.Unlock() //o defer garante que a liberação do bloqueio ocorra de maneira segura e sempre que a função terminar sua execução
+
+	//o defer garante que a liberação do bloqueio ocorra de maneira segura e sempre que a função terminar sua execução
 
 	v.Latitude += (rand.Float64() - 0.5) * 0.001
 	v.Longitude += (rand.Float64() - 0.5) * 0.001
+
+	fmt.Println("local atual do veiculo: lat e longi", v.Latitude, v.Longitude)
 }
 
 func DiminuirNivelBateria(v *Veiculo) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
 
 	if !v.IsCarregando {
 		// diminui a bateria entre 30.4 e 15.1 por atualização
@@ -50,23 +49,18 @@ func DiminuirNivelBateria(v *Veiculo) {
 }
 
 func GetNivelBateria(v *Veiculo) float64 {
-	v.mu.Lock()
-	defer v.mu.Unlock()
 
 	return v.Bateria
 }
 
 func GetLocalizacaoVeiculo(v *Veiculo) (float64, float64) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
 
 	return v.Latitude, v.Longitude
 }
 
 // func CarregarBateria(v *Veiculo) {
-// 	v.mu.Lock()
-// 	defer v.mu.Unlock()
+//
+//
 
 // 	v.IsCarregando = true
 // }
-

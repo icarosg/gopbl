@@ -1,6 +1,52 @@
 [
     {
+<<<<<<< HEAD
         "ID": "1",
+=======
+        "ID": "novo",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "new",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "nnn",
+        "Latitude": 23,
+        "Longitude": 24,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "te",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "te",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "te",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "tes",
+>>>>>>> main
         "Latitude": 10,
         "Longitude": 10,
         "Bateria": 100,

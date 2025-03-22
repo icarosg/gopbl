@@ -84,28 +84,22 @@ func GetLocalizacaoPosto(p *Posto) (float64, float64) {
 }
 
 func PararCarregamentoBateria(v *Veiculo) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
 
 	v.IsCarregando = false
 	v.Bateria = 100.0
-	fmt.Printf("[%s] Carregamento concluído em: %s | Nível de bateria: %.2f%%\n",v.ID, time.Now().Format("02/01/2006 15:04:05"), v.Bateria)
+	fmt.Printf("[%s] Carregamento concluído em: %s | Nível de bateria: %.2f%%\n", v.ID, time.Now().Format("02/01/2006 15:04:05"), v.Bateria)
 }
 
 func CarregarBateria(v *Veiculo) {
-	v.mu.Lock()
 	v.IsCarregando = true
 	tempoInicio := time.Now()
-	fmt.Printf("[%s] Carregamento iniciado em: %s | Nível de bateria inicial: %.2f%%\n",v.ID, tempoInicio.Format("02/01/2006 15:04:05"), v.Bateria)
-	v.mu.Unlock()
+	fmt.Printf("[%s] Carregamento iniciado em: %s | Nível de bateria inicial: %.2f%%\n", v.ID, tempoInicio.Format("02/01/2006 15:04:05"), v.Bateria)
 
 	// Goroutine para parar o carregamento após 1 minuto
 	go func() {
 		time.Sleep(1 * time.Minute) // Espera 1 minuto
 
-		v.mu.Lock()
 		//v.IsCarregando = false
 		PararCarregamentoBateria(v)
-		v.mu.Unlock()
 	}()
 }
