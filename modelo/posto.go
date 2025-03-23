@@ -2,6 +2,7 @@ package modelo
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 )
@@ -95,11 +96,46 @@ func CarregarBateria(v *Veiculo) {
 	tempoInicio := time.Now()
 	fmt.Printf("[%s] Carregamento iniciado em: %s | Nível de bateria inicial: %.2f%%\n", v.ID, tempoInicio.Format("02/01/2006 15:04:05"), v.Bateria)
 
-	// Goroutine para parar o carregamento após 1 minuto
+	// Goroutine para parar o carregamento após 1 minuto por cada 1% de bateria que falta
 	go func() {
-		time.Sleep(1 * time.Minute) // Espera 1 minuto
+		time.Sleep(time.Duration(100-v.Bateria) * time.Minute) // Espera 1 minuto por cada 1% de bateria que falta
 
 		//v.IsCarregando = false
 		PararCarregamentoBateria(v)
 	}()
 }
+
+
+func TempoEstimado(p *Posto, tempoDistanciaVeiculo time.Duration) (time.Duration, int) {
+	tempo_total := tempoDistanciaVeiculo
+	posicao_na_fila := -1
+
+	// Se não houver veículos na fila, retorna apenas o tempo de chegada
+	if len(p.Fila) == 0 {
+		return tempo_total, 0
+	}
+
+	// Calcula o tempo total considerando todos os veículos na fila
+	for i := range p.Fila {
+		veiculo := p.Fila[i]
+		tempo_carregamento := time.Duration(100-veiculo.Bateria) * time.Minute
+		tempo_ate_posto_veiculo_fila := time.Duration(math.Abs(veiculo.Latitude-p.Latitude)+math.Abs(veiculo.Longitude-p.Longitude)) * 15 * time.Second
+
+		// Adiciona o tempo de carregamento do veículo atual na fila
+		tempo_total += tempo_carregamento
+
+		// Se o veículo atual chegar antes que este veículo da fila, podemos inserir na posição i
+		if tempoDistanciaVeiculo < tempo_ate_posto_veiculo_fila {
+			posicao_na_fila = i
+			break
+		}
+	}
+
+	// Se não encontrou uma posição na fila, será o último
+	if posicao_na_fila == -1 {
+		posicao_na_fila = len(p.Fila)
+	}
+
+	return tempo_total, posicao_na_fila
+}
+
