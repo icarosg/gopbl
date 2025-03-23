@@ -188,7 +188,7 @@ func desconectarDoServidor() {
 	defer resp.Body.Close()
 	fmt.Println("Desconectado!")
 }
-
+//TESTANDO
 func encontrarPostoRecomendado() {
 
 	postos := listarPostos()
