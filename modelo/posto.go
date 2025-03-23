@@ -3,6 +3,7 @@ package modelo
 import (
 	"fmt"
 	"math"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -15,6 +16,21 @@ type Posto struct {
 	Fila         []*Veiculo
 	QtdFila      int
 	BombaOcupada bool
+}
+
+// Header implements http.ResponseWriter.
+func (p *Posto) Header() http.Header {
+	panic("unimplemented")
+}
+
+// Write implements http.ResponseWriter.
+func (p *Posto) Write([]byte) (int, error) {
+	panic("unimplemented")
+}
+
+// WriteHeader implements http.ResponseWriter.
+func (p *Posto) WriteHeader(statusCode int) {
+	panic("unimplemented")
 }
 
 func NovoPosto(id string, lat float64, long float64) Posto {
@@ -144,4 +160,3 @@ func TempoEstimado(p *Posto, tempoDistanciaVeiculo time.Duration) (time.Duration
 
 	return tempo_total, posicao_na_fila
 }
-

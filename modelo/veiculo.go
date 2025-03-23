@@ -10,12 +10,12 @@ import (
 )
 
 type Veiculo struct {
-	ID                  string
-	Latitude            float64
-	Longitude           float64
-	Bateria             float64
-	IsCarregando        bool
-	IsDeslocandoAoPosto bool
+	ID           string
+	Latitude     float64
+	Longitude    float64
+	Bateria      float64
+	IsCarregando bool
+	Pagamentos *[]PagamentoJson
 }
 
 func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
@@ -29,13 +29,21 @@ func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
 	}
 }
 
+// func adicionarPagamento(v *Veiculo, p PagamentoJson) {
+
+// 	*v.Pagamentos = append(*v.Pagamentos, p)
+
+// }
+
 func AtualizarLocalizacao(v *Veiculo) {
 	if !v.IsDeslocandoAoPosto && !v.IsCarregando {
 		v.Latitude += float64(rand.Intn(11) - 5) //valor entre 5 e -5
 		v.Longitude += float64(rand.Intn(11) - 5)
 
-		DiminuirNivelBateria(v)
-		fmt.Println("local atual do veiculo: lat e longi", v.Latitude, v.Longitude)
+	fmt.Println("_________________________________________________________________________________________________")
+	fmt.Printf("localalizacao atual do veiculo: latitude %.4f e longitude %.4f\n", v.Latitude, v.Longitude)
+	fmt.Println("_________________________________________________________________________________________________")
+	DiminuirNivelBateria(v)
 	}
 }
 
@@ -118,7 +126,7 @@ func GetNivelBateriaAoChegarNoPosto(v Veiculo, p *Posto) float64 {
 				v.Longitude -= 5
 			}
 		}
-
+    
 		if !v.IsCarregando {
 			// diminui a bateria entre 3.0 e 1.0 por atualização
 			v.Bateria -= rand.Float64()*3.0 + 1.0

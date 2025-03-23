@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"gopbl/modelo"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"sync"
+	"time"
 )
 
 type PostoJson struct {
@@ -42,6 +44,8 @@ func main() {
 	http.HandleFunc("/posto", handler)
 	http.HandleFunc("/listar", listarPostos)
 	http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
+	http.HandleFunc("/posto-recomendado", postoRecomendado)
+	http.HandleFunc("/reservar-vaga", reservarVagaPosto)
 
 	fmt.Println("Servidor HTTP iniciado em http://localhost:8080")
 	erro := http.ListenAndServe("localhost:8080", nil)
@@ -100,8 +104,8 @@ func getQtdClientes() int {
 func inicializar() {
 	posto1 := &modelo.Posto{
 		ID:           "posto1",
-		Latitude:     800,
-		Longitude:    100,
+		Latitude:     10,
+		Longitude:    15,
 		Fila:         make([]*modelo.Veiculo, 0),
 		QtdFila:      0,
 		BombaOcupada: true,
@@ -129,8 +133,8 @@ func inicializar() {
 	posto2.Fila = append(posto2.Fila, veiculo1)
 	posto2.QtdFila = 1
 
-	posto1.Fila = append(posto1.Fila, veiculo1)
-	posto1.QtdFila = 1
+	// posto1.Fila = append(posto1.Fila, veiculo1)
+	// posto1.QtdFila = 1
 
 	// adiciona os postos ao slice
 	postosMutex.Lock()
@@ -245,6 +249,110 @@ func cadastrarVeiculo(w http.ResponseWriter, r *http.Request) {
 
 	salvarVeiculosNoArquivo()
 
+}
+
+func reservarVagaPosto(w http.ResponseWriter, r *http.Request) {
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
+
+	// decodifica o JSON do body da req
+	var pagamentoJson modelo.PagamentoJson
+	err := json.NewDecoder(r.Body).Decode(&pagamentoJson)
+	if err != nil {
+		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	var veiculo *modelo.Veiculo
+	for i := range veiculos {
+		if veiculos[i].ID == pagamentoJson.ID_veiculo {
+			veiculo = veiculos[i]
+			break
+		}
+	}
+
+	// procura o posto pelo ID
+	var posto *modelo.Posto
+	for i := range postos {
+		if postos[i].ID == pagamentoJson.ID_posto {
+			posto = postos[i]
+			break
+		}
+	}
+
+	if posto == nil {
+		http.Error(w, "Posto não encontrado", http.StatusNotFound)
+		return
+	}
+
+	if veiculo == nil {
+		http.Error(w, "Veículo não encontrado", http.StatusNotFound)
+		return
+	}
+
+	reservado := modelo.ReservarVaga(posto, veiculo)
+	if reservado {
+		fmt.Printf("Vaga reservada com sucesso para o veículo %s no posto %s\n", veiculo.ID, posto.ID)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		fmt.Printf("Veículo %s adicionado à fila do posto %s\n", veiculo.ID, posto.ID)
+		w.WriteHeader(http.StatusAccepted)
+	}
+}
+
+func postoRecomendado(w http.ResponseWriter, r *http.Request) {
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
+
+	var veiculo modelo.Veiculo
+	err := json.NewDecoder(r.Body).Decode(&veiculo)
+	if err != nil {
+		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	var menor_tempo time.Duration = -1
+	var postoRecomendado *modelo.Posto
+	var posicaoFila int
+
+	for i := range postos {
+		posto := postos[i]
+		//tempo ate o posto é a distancia entre o veiculo e o posto multiplicado por 15 segundos, 1 de distancia vezes 15 segundos
+		tempo_ate_posto := time.Duration(math.Abs(veiculo.Latitude-posto.Latitude)+math.Abs(veiculo.Longitude-posto.Longitude)) * 15 * time.Second
+		tempo_total, posicao := modelo.TempoEstimado(posto, tempo_ate_posto)
+		if menor_tempo == -1 {
+			menor_tempo = tempo_total
+			postoRecomendado = posto
+			posicaoFila = posicao
+		} else if tempo_total < menor_tempo {
+			menor_tempo = tempo_total
+			postoRecomendado = posto
+			posicaoFila = posicao
+		}
+	}
+
+	if postoRecomendado != nil {
+		fmt.Printf("Posto recomendado: %s\n", postoRecomendado.ID)
+		fmt.Printf("Posição na fila: %d\n", posicaoFila)
+	} else {
+		fmt.Println("Nenhum posto recomendado encontrado")
+	}
+
+	recomendadoResponse := modelo.RecomendadoResponse{
+		ID_posto:        postoRecomendado.ID,
+		Latitude:        postoRecomendado.Latitude,
+		Longitude:       postoRecomendado.Longitude,
+		Posicao_na_fila: posicaoFila,
+	}
+
+	respostaJSON, err := json.Marshal(recomendadoResponse)
+	if err != nil {
+		http.Error(w, "Erro ao converter resposta para JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(respostaJSON)
 }
 
 func listarPostos(w http.ResponseWriter, r *http.Request) {
