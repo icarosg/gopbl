@@ -45,6 +45,7 @@ func main() {
 	http.HandleFunc("/listar", listarPostos)
 	http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
 	http.HandleFunc("/posto-recomendado", postoRecomendado)
+	http.HandleFunc("/reservar-vaga", reservarVagaPosto)
 
 	fmt.Println("Servidor HTTP iniciado em http://localhost:8080")
 	erro := http.ListenAndServe("localhost:8080", nil)
@@ -216,6 +217,55 @@ func cadastrarVeiculo(w http.ResponseWriter, r *http.Request) {
 
 	salvarVeiculosNoArquivo()
 
+}
+
+func reservarVagaPosto(w http.ResponseWriter, r *http.Request) {
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
+
+	// decodifica o JSON do body da req
+	var pagamentoJson modelo.PagamentoJson
+	err := json.NewDecoder(r.Body).Decode(&pagamentoJson)
+	if err != nil {
+		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	var veiculo *modelo.Veiculo
+	for i := range veiculos {
+		if veiculos[i].ID == pagamentoJson.ID_veiculo {
+			veiculo = veiculos[i]
+			break
+		}
+	}
+
+	// procura o posto pelo ID
+	var posto *modelo.Posto
+	for i := range postos {
+		if postos[i].ID == pagamentoJson.ID_posto {
+			posto = postos[i]
+			break
+		}
+	}
+
+	if posto == nil {
+		http.Error(w, "Posto não encontrado", http.StatusNotFound)
+		return
+	}
+
+	if veiculo == nil {
+		http.Error(w, "Veículo não encontrado", http.StatusNotFound)
+		return
+	}
+
+	reservado := modelo.ReservarVaga(posto, veiculo)
+	if reservado {
+		fmt.Printf("Vaga reservada com sucesso para o veículo %s no posto %s\n", veiculo.ID, posto.ID)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		fmt.Printf("Veículo %s adicionado à fila do posto %s\n", veiculo.ID, posto.ID)
+		w.WriteHeader(http.StatusAccepted)
+	}
 }
 
 func postoRecomendado(w http.ResponseWriter, r *http.Request) {

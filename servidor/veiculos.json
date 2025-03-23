@@ -5,5 +5,12 @@
         "Longitude": 10,
         "Bateria": 100,
         "IsCarregando": false
+    },
+    {
+        "ID": "34f",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
     }
 ]

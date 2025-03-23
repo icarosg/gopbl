@@ -15,6 +15,7 @@ type Veiculo struct {
 	Longitude    float64
 	Bateria      float64
 	IsCarregando bool
+	Pagamentos *[]PagamentoJson
 }
 
 func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
@@ -26,6 +27,12 @@ func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
 		IsCarregando: false,
 	}
 }
+
+// func adicionarPagamento(v *Veiculo, p PagamentoJson) {
+
+// 	*v.Pagamentos = append(*v.Pagamentos, p)
+
+// }
 
 func AtualizarLocalizacao(v *Veiculo) {
 
@@ -57,6 +64,42 @@ func GetNivelBateria(v *Veiculo) float64 {
 func GetLocalizacaoVeiculo(v *Veiculo) (float64, float64) {
 
 	return v.Latitude, v.Longitude
+}
+
+func GetNivelBateriaAoChegarNoPosto(v Veiculo, p *Posto) float64 {
+	for v.Latitude != p.Latitude || v.Longitude != p.Longitude {
+		if v.Latitude < p.Latitude {
+			if p.Latitude-v.Latitude <= 5 {
+				v.Latitude = p.Latitude
+			} else {
+				v.Latitude += 5
+			}
+		} else if v.Latitude > p.Latitude {
+			if v.Latitude-p.Latitude <= 5 {
+				v.Latitude = p.Latitude
+			} else {
+				v.Latitude -= 5
+			}
+		}
+
+		if v.Longitude < p.Longitude {
+			if p.Longitude-v.Longitude <= 5 {
+				v.Longitude = p.Longitude
+			} else {
+				v.Longitude += 5
+			}
+		} else if v.Longitude > p.Longitude {
+			if v.Longitude-p.Longitude <= 5 {
+				v.Longitude = p.Longitude
+			} else {
+				v.Longitude -= 5
+			}
+		}
+
+		DiminuirNivelBateria(v)
+	}
+
+	return float64(v.Bateria)
 }
 
 // func CarregarBateria(v *Veiculo) {

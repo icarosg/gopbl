@@ -22,5 +22,29 @@
         ],
         "QtdFila": 1,
         "BombaOcupada": true
+    },
+    {
+        "ID": "posto1",
+        "Latitude": 10,
+        "Longitude": 15,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": true
+    },
+    {
+        "ID": "posto2",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [
+            {
+                "ID": "veiculo1",
+                "Latitude": 10,
+                "Longitude": 10,
+                "Bateria": 20,
+                "IsCarregando": false
+            }
+        ],
+        "QtdFila": 1,
+        "BombaOcupada": true
     }
 ]

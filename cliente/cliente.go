@@ -20,12 +20,12 @@ type VeiculoJson struct {
 	Bateria   float64 `json:"bateria"`
 }
 
-// type RecomendadoResponse struct {
-// 	ID_posto        string  `json:"id_posto"`
-// 	Latitude        float64 `json:"latitude"`
-// 	Longitude       float64 `json:"longitude"`
-// 	Posicao_na_fila int     `json:"posicao_na_fila"`
-// }
+type RecomendadoResponse struct {
+	ID_posto        string  `json:"id_posto"`
+	Latitude        float64 `json:"latitude"`
+	Longitude       float64 `json:"longitude"`
+	Posicao_na_fila int     `json:"posicao_na_fila"`
+}
 
 var opcao int
 var (
@@ -115,6 +115,79 @@ func selecionarObjetivo() {
 			fmt.Println("Opção inválida")
 		}
 	}
+}
+
+func reservarVaga() {
+	fmt.Println("Posto recomendado atualmente: ")
+	encontrarPostoRecomendado()
+	fmt.Println("A seguir a lista com todos os postos disponíveis: ")
+	listaDosPosto := listarPostos()
+	fmt.Println("Digite o ID do posto que deseja reservar: ")
+	var idPosto string
+	fmt.Scanln(&idPosto)
+
+	var postoEncontrado bool = false
+	//var pagamentoRealizado bool = false
+
+	var posto_selecionado *modelo.Posto
+
+	for i := range listaDosPosto {
+		posto := &listaDosPosto[i]
+		if posto.ID == idPosto {
+			postoEncontrado = true
+			posto_selecionado = posto
+			break
+		}
+	}
+	if !postoEncontrado {
+		fmt.Println("Posto não encontrado")
+		return
+	}
+	valorPraPagar := (100 - modelo.GetNivelBateriaAoChegarNoPosto(veiculo,posto_selecionado)) * 0.5 //0.5 reais por % nivel de bateria
+	for {
+		fmt.Println("É necessario realizar o pagamento para reservar a vaga")
+		fmt.Printf("O valor a ser pago é de %.2f\n", valorPraPagar)
+		fmt.Println("Deseja concluir o pagamento? (0 - sim, 1 - nao): ")
+		var opcao int
+		fmt.Scanf("%d", &opcao)
+		if opcao == 0 {
+			fmt.Printf("Pagamento realizado com sucesso!, o valor de %.2f foi cobrado da sua conta bancaria\n", valorPraPagar)
+			break
+		} else if opcao == 1 {
+			fmt.Println("Pagamento não realizado")
+			return
+		} else {
+			fmt.Println("Opção inválida")
+			return
+		}
+	}
+	// var pagamentoFeito modelo.PagamentoJson
+	pagamentoFeito := modelo.PagamentoJson{
+		ID_veiculo: veiculo.ID,
+		Valor:      valorPraPagar,
+		ID_posto:      posto_selecionado.ID,
+	}
+	req, err := json.Marshal(pagamentoFeito)
+	if err != nil {
+		fmt.Printf("Erro ao converter pagamento para JSON: %v\n", err)
+		return
+	}
+
+	// Faz a requisição POST para o servidor
+	resp, err := http.Post("http://localhost:8080/pagamento", "application/json", bytes.NewBuffer(req))
+	if err != nil {
+		fmt.Printf("Erro ao enviar requisição: %v\n", err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	// body, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	println("erro ao ler resposta do servidor")
+	// 	return
+	// }
+
 }
 
 func cadastrarVeiculo() {
@@ -230,11 +303,9 @@ func encontrarPostoRecomendado() {
 
 	// Exibe as informações do posto recomendado
 	fmt.Println("*******************************************************")
-	fmt.Printf("Posto recomendado: %s\n", recomendado.ID_posto)	
+	fmt.Printf("Posto recomendado: %s\n", recomendado.ID_posto)
 	fmt.Printf("Latitude: %.4f\n", recomendado.Latitude)
 	fmt.Printf("Longitude: %.4f\n", recomendado.Longitude)
 	fmt.Printf("Posição na fila: %d\n", recomendado.Posicao_na_fila)
 	fmt.Println("*******************************************************")
-
-
 }
