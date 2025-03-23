@@ -182,3 +182,4 @@ func desconectarDoServidor() {
 	defer resp.Body.Close()
 	fmt.Println("Desconectado!")
 }
+//teste
