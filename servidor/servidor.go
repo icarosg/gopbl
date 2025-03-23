@@ -102,17 +102,35 @@ func inicializar() {
 		ID:           "posto1",
 		Latitude:     800,
 		Longitude:    100,
-		QtdFila:      10,
+		Fila:         make([]*modelo.Veiculo, 0),
+		QtdFila:      0,
 		BombaOcupada: true,
 	}
 
 	posto2 := &modelo.Posto{
 		ID:           "posto2",
-		Latitude:     500,
-		Longitude:    100,
-		QtdFila:      10,
+		Latitude:     10,
+		Longitude:    10,
+		Fila:         make([]*modelo.Veiculo, 0),
+		QtdFila:      0,
 		BombaOcupada: true,
 	}
+
+	// Adiciona um veículo à fila do posto2 com coordenadas mais realistas
+	veiculo1 := &modelo.Veiculo{
+		ID:           "veiculo1",
+		Latitude:     10,
+		Longitude:    10,
+		Bateria:      20,
+		IsCarregando: false,
+	}
+
+	// Adiciona o veículo apenas ao posto2
+	posto2.Fila = append(posto2.Fila, veiculo1)
+	posto2.QtdFila = 1
+
+	posto1.Fila = append(posto1.Fila, veiculo1)
+	posto1.QtdFila = 1
 
 	// adiciona os postos ao slice
 	postosMutex.Lock()

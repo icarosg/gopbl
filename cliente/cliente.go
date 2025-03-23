@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gopbl/modelo"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,11 +26,13 @@ var (
 	id        string
 	latitude  float64
 	longitude float64
-	bateria   float64
+	//bateria   float64
 )
 var veiculo modelo.Veiculo
 var ticker *time.Ticker
 var goroutineCriada bool
+var postoRecomendado *modelo.Posto
+var posicaoFila int
 
 func main() {
 	// captura sinal em caso do cliente se desconectar
@@ -94,6 +97,7 @@ func selecionarObjetivo() {
 			cadastrarVeiculo()
 		case opcao == 1:
 			fmt.Println("Encontrar posto recomendado")
+			encontrarPostoRecomendado()
 		case opcao == 2:
 			fmt.Println("Reservar vaga em um posto")
 		case opcao == 3:
@@ -113,8 +117,8 @@ func cadastrarVeiculo() {
 	fmt.Scanln(&latitude)
 	fmt.Println("Digite a longitude do veículo:")
 	fmt.Scanln(&longitude)
-	fmt.Println("Digite a procetagem de bateria do veículo:")
-	fmt.Scanln(&bateria)
+	// fmt.Println("Digite a procetagem de bateria do veículo:")
+	// fmt.Scanln(&bateria)
 
 	//fmt.Println("Veículo cadastrado com sucesso!")
 	veiculo = modelo.NovoVeiculo(id, longitude, latitude)
@@ -136,19 +140,19 @@ func cadastrarVeiculo() {
 	defer post.Body.Close()
 }
 
-func listarPostos() {
+func listarPostos() []modelo.Posto {
 	//fiz a requisicao para listar os postos GET
 	resp, erro := http.Get("http://localhost:8080/listar")
 	if erro != nil {
 		fmt.Println("Erro ao listar postos:", erro)
-		return
+		return nil
 	}
 
 	//to lendo o corpo da resposta
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler resposta:", err)
-		return
+		return nil
 	}
 
 	//to convertendo o JSON para um slice de postos
@@ -156,7 +160,7 @@ func listarPostos() {
 	err = json.Unmarshal(body, &postos)
 	if err != nil {
 		fmt.Println("Erro ao converter JSON:", err)
-		return
+		return nil
 	}
 
 	//printando as informacoes dos postos
@@ -169,6 +173,8 @@ func listarPostos() {
 		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
 		fmt.Println("----------------------------------------")
 	}
+
+	return postos
 }
 
 func desconectarDoServidor() {
@@ -182,4 +188,43 @@ func desconectarDoServidor() {
 	defer resp.Body.Close()
 	fmt.Println("Desconectado!")
 }
-//teste
+
+func encontrarPostoRecomendado() {
+
+	postos := listarPostos()
+	if postos == nil {
+		return
+	}
+
+	//var posto_recomendado *modelo.Posto
+	var menor_tempo time.Duration = -1
+	
+
+	for i := range postos {
+		posto := &postos[i]
+		//tempo ate o posto é a distancia entre o veiculo e o posto multiplicado por 15 segundos, 1 de distancia vezes 15 segundos
+		tempo_ate_posto := time.Duration(math.Abs(veiculo.Latitude-posto.Latitude)+math.Abs(veiculo.Longitude-posto.Longitude)) * 15 * time.Second
+		tempo_total, posicao := modelo.TempoEstimado(posto, tempo_ate_posto)
+		if menor_tempo == -1 {
+			menor_tempo = tempo_total
+			postoRecomendado = posto
+			posicaoFila = posicao
+			
+		} else if tempo_total < menor_tempo {
+			menor_tempo = tempo_total
+			postoRecomendado = posto
+			posicaoFila = posicao
+		}
+	}
+
+	if postoRecomendado != nil {
+		fmt.Printf("Posto recomendado: %s\n", postoRecomendado.ID)
+		if posicaoFila == -1 {
+			fmt.Printf("Ultimo da fila")
+		} else {
+			fmt.Printf("Posição na fila: %d\n", posicaoFila)
+		}
+	} else {
+		fmt.Println("Nenhum posto recomendado encontrado")
+	}
+}
