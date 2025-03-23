@@ -22,11 +22,8 @@ type VeiculoJson struct {
 }
 
 var opcao int
-var (
-	id        string
-	latitude  float64
-	longitude float64
-	//bateria   float64
+var ( 
+	id string; latitude float64; longitude float64; //bateria   float64
 )
 var veiculo modelo.Veiculo
 var ticker *time.Ticker
@@ -59,17 +56,6 @@ func main() {
 }
 
 func selecionarObjetivo() {
-	//alterar loc do veículo
-	if veiculo.ID != "" {
-		ticker = time.NewTicker(2 * time.Second) // temporizador faz com que chame a função a cada dois segundos
-		go func() {
-			for range ticker.C {
-				modelo.AtualizarLocalizacao(&veiculo)
-				fmt.Println("aqui")
-			}
-		}()
-	}
-
 	for {
 		if veiculo.ID != "" {
 			if !goroutineCriada {

@@ -31,7 +31,8 @@ func NovoPosto(id string, lat float64, long float64) Posto {
 	}
 }
 
-func ReservarVaga(p *Posto, v *Veiculo) bool { // retorna true se caso conseguir abastecer diretamente
+func ReservarVaga(p *Posto, v *Veiculo) bool { 
+	// retorna true se caso conseguir abastecer diretamente
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -105,26 +106,31 @@ func CarregarBateria(v *Veiculo) {
 	}()
 }
 
-
 func TempoEstimado(p *Posto, tempoDistanciaVeiculo time.Duration) (time.Duration, int) {
 	tempo_total := tempoDistanciaVeiculo
 	posicao_na_fila := -1
 
-	// Se não houver veículos na fila, retorna apenas o tempo de chegada
+	// se não houver veículos na fila, retorna apenas o tempo de chegada
 	if len(p.Fila) == 0 {
 		return tempo_total, 0
 	}
 
-	// Calcula o tempo total considerando todos os veículos na fila
 	for i := range p.Fila {
 		veiculo := p.Fila[i]
-		tempo_carregamento := time.Duration(100-veiculo.Bateria) * time.Minute
+		var tempo_carregamento time.Duration
+
+		if veiculo.Latitude == p.Latitude && veiculo.Longitude == p.Longitude {
+			tempo_carregamento = time.Duration(100-veiculo.Bateria) * time.Minute
+		} else {
+			nivelBateriaAoChegarNoPosto := GetNivelBateriaAoChegarNoPosto(*veiculo, p)
+			tempo_carregamento = time.Duration(100-nivelBateriaAoChegarNoPosto) * time.Minute
+		}
+
 		tempo_ate_posto_veiculo_fila := time.Duration(math.Abs(veiculo.Latitude-p.Latitude)+math.Abs(veiculo.Longitude-p.Longitude)) * 15 * time.Second
 
-		// Adiciona o tempo de carregamento do veículo atual na fila
 		tempo_total += tempo_carregamento
 
-		// Se o veículo atual chegar antes que este veículo da fila, podemos inserir na posição i
+		// se o veículo atual chegar antes que este veículo da fila, é inserido a frente dele
 		if tempoDistanciaVeiculo < tempo_ate_posto_veiculo_fila {
 			posicao_na_fila = i
 			break
