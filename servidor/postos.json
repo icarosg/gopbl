@@ -1,18 +1,10 @@
 [
     {
         "ID": "posto1",
-        "Latitude": 800,
-        "Longitude": 100,
-        "Fila": [
-            {
-                "ID": "veiculo1",
-                "Latitude": 10,
-                "Longitude": 10,
-                "Bateria": 20,
-                "IsCarregando": false
-            }
-        ],
-        "QtdFila": 1,
+        "Latitude": 10,
+        "Longitude": 15,
+        "Fila": [],
+        "QtdFila": 0,
         "BombaOcupada": true
     },
     {

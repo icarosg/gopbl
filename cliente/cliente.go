@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"gopbl/modelo"
 	"io"
-	"math"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,6 +20,13 @@ type VeiculoJson struct {
 	Bateria   float64 `json:"bateria"`
 }
 
+// type RecomendadoResponse struct {
+// 	ID_posto        string  `json:"id_posto"`
+// 	Latitude        float64 `json:"latitude"`
+// 	Longitude       float64 `json:"longitude"`
+// 	Posicao_na_fila int     `json:"posicao_na_fila"`
+// }
+
 var opcao int
 var (
 	id        string
@@ -31,8 +37,6 @@ var (
 var veiculo modelo.Veiculo
 var ticker *time.Ticker
 var goroutineCriada bool
-var postoRecomendado *modelo.Posto
-var posicaoFila int
 
 func main() {
 	// captura sinal em caso do cliente se desconectar
@@ -95,14 +99,18 @@ func selecionarObjetivo() {
 		case opcao == 0:
 			fmt.Println("Cadastrar veículo")
 			cadastrarVeiculo()
+
 		case opcao == 1:
 			fmt.Println("Encontrar posto recomendado")
 			encontrarPostoRecomendado()
+
 		case opcao == 2:
 			fmt.Println("Reservar vaga em um posto")
+
 		case opcao == 3:
 			fmt.Println("Listar todos os postos")
 			listarPostos()
+
 		default:
 			fmt.Println("Opção inválida")
 		}
@@ -190,41 +198,43 @@ func desconectarDoServidor() {
 }
 
 func encontrarPostoRecomendado() {
-
-	postos := listarPostos()
-	if postos == nil {
+	// Converte o veículo para JSON
+	req, err := json.Marshal(veiculo)
+	if err != nil {
+		fmt.Printf("Erro ao converter veículo para JSON: %v\n", err)
 		return
 	}
 
-	//var posto_recomendado *modelo.Posto
-	var menor_tempo time.Duration = -1
-	
+	// Faz a requisição POST para o servidor
+	resp, err := http.Post("http://localhost:8080/posto-recomendado", "application/json", bytes.NewBuffer(req))
+	if err != nil {
+		fmt.Printf("Erro ao enviar requisição: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
 
-	for i := range postos {
-		posto := &postos[i]
-		//tempo ate o posto é a distancia entre o veiculo e o posto multiplicado por 15 segundos, 1 de distancia vezes 15 segundos
-		tempo_ate_posto := time.Duration(math.Abs(veiculo.Latitude-posto.Latitude)+math.Abs(veiculo.Longitude-posto.Longitude)) * 15 * time.Second
-		tempo_total, posicao := modelo.TempoEstimado(posto, tempo_ate_posto)
-		if menor_tempo == -1 {
-			menor_tempo = tempo_total
-			postoRecomendado = posto
-			posicaoFila = posicao
-			
-		} else if tempo_total < menor_tempo {
-			menor_tempo = tempo_total
-			postoRecomendado = posto
-			posicaoFila = posicao
-		}
+	// Lê a resposta do servidor
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Erro ao ler resposta: %v\n", err)
+		return
 	}
 
-	if postoRecomendado != nil {
-		fmt.Printf("Posto recomendado: %s\n", postoRecomendado.ID)
-		if posicaoFila == -1 {
-			fmt.Printf("Ultimo da fila")
-		} else {
-			fmt.Printf("Posição na fila: %d\n", posicaoFila)
-		}
-	} else {
-		fmt.Println("Nenhum posto recomendado encontrado")
+	// Converte a resposta JSON para a estrutura RecomendadoResponse
+	var recomendado modelo.RecomendadoResponse
+	err = json.Unmarshal(body, &recomendado)
+	if err != nil {
+		fmt.Printf("Erro ao converter resposta JSON: %v\n", err)
+		return
 	}
+
+	// Exibe as informações do posto recomendado
+	fmt.Println("*******************************************************")
+	fmt.Printf("Posto recomendado: %s\n", recomendado.ID_posto)	
+	fmt.Printf("Latitude: %.4f\n", recomendado.Latitude)
+	fmt.Printf("Longitude: %.4f\n", recomendado.Longitude)
+	fmt.Printf("Posição na fila: %d\n", recomendado.Posicao_na_fila)
+	fmt.Println("*******************************************************")
+
+
 }

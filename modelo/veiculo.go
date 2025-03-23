@@ -33,8 +33,9 @@ func AtualizarLocalizacao(v *Veiculo) {
 
 	v.Latitude += (rand.Float64() - 0.5) * 0.001
 	v.Longitude += (rand.Float64() - 0.5) * 0.001
-
-	fmt.Println("local atual do veiculo: lat e longi", v.Latitude, v.Longitude)
+	fmt.Println("_________________________________________________________________________________________________")
+	fmt.Printf("localalizacao atual do veiculo: latitude %.4f e longitude %.4f\n", v.Latitude, v.Longitude)
+	fmt.Println("_________________________________________________________________________________________________")
 }
 
 func DiminuirNivelBateria(v *Veiculo) {
