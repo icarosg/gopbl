@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"sync"
-	"net/http"
-	"log"
 )
 
 type PostoJson struct {
@@ -39,18 +37,6 @@ var (
 )
 
 func main() {
-<<<<<<< HEAD
-	// Inicializa os postos
-	inicializar()
-
-	// Configura as rotas HTTP
-	http.HandleFunc("/posto", handler)
-	http.HandleFunc("/listar", ListarPostos)
-	http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
-
-	// Cria um listener TCP na porta 8080
-	listener, erro := net.Listen("tcp", "localhost:8080")
-=======
 	http.HandleFunc("/conectar", conexao)
 	http.HandleFunc("/desconectar", desconectar)
 	http.HandleFunc("/posto", handler)
@@ -59,54 +45,10 @@ func main() {
 
 	fmt.Println("Servidor HTTP iniciado em http://localhost:8080")
 	erro := http.ListenAndServe("localhost:8080", nil)
->>>>>>> main
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
 		os.Exit(1)
 	}
-<<<<<<< HEAD
-	defer listener.Close()
-
-	fmt.Println("Servidor iniciado em localhost:8080")
-
-	// Inicia o servidor HTTP no listener TCP
-	go func() {
-		log.Fatal(http.Serve(listener, nil))
-	}()
-
-	// Mantém o servidor principal em execução
-	for {
-		conexao, erro := listener.Accept()
-		if erro != nil {
-			fmt.Println("Erro ao conectar o cliente", erro)
-			continue
-		}
-
-		incrementar()
-		fmt.Println("Cliente conectado à porta:", conexao.RemoteAddr())
-		fmt.Println("Total de clientes conectados:", getQtdClientes())
-
-		go cliente(conexao)
-	}
-}
-
-func cliente(conexao net.Conn) {
-	defer func() {
-		decrementar()
-		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
-		conexao.Close()
-	}()
-
-	buffer := make([]byte, 1024)
-	for {
-		_, erro := conexao.Read(buffer)
-		if erro != nil {
-			if erro == io.EOF {
-				fmt.Printf("O cliente %s fechou a conexão\n", conexao.RemoteAddr())
-			}
-			break
-		}
-=======
 }
 
 func conexao(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +76,6 @@ func desconectar(w http.ResponseWriter, r *http.Request) {
 	_, erro := fmt.Fprintf(w, "Desconectado do servidor! Total de clientes conectados: %d", getQtdClientes())
 	if erro != nil {
 		fmt.Println("Erro ao responder ao cliente:", erro)
->>>>>>> main
 	}
 }
 
@@ -154,9 +95,6 @@ func getQtdClientes() int {
 	mutex.Lock()
 	defer mutex.Unlock()
 	return qtdClientesConectados
-<<<<<<< HEAD
-}
-=======
 }
 
 func inicializar() {
@@ -164,17 +102,35 @@ func inicializar() {
 		ID:           "posto1",
 		Latitude:     800,
 		Longitude:    100,
-		QtdFila:      10,
+		Fila:         make([]*modelo.Veiculo, 0),
+		QtdFila:      0,
 		BombaOcupada: true,
 	}
 
 	posto2 := &modelo.Posto{
 		ID:           "posto2",
-		Latitude:     500,
-		Longitude:    100,
-		QtdFila:      10,
+		Latitude:     10,
+		Longitude:    10,
+		Fila:         make([]*modelo.Veiculo, 0),
+		QtdFila:      0,
 		BombaOcupada: true,
 	}
+
+	// Adiciona um veículo à fila do posto2 com coordenadas mais realistas
+	veiculo1 := &modelo.Veiculo{
+		ID:           "veiculo1",
+		Latitude:     10,
+		Longitude:    10,
+		Bateria:      20,
+		IsCarregando: false,
+	}
+
+	// Adiciona o veículo apenas ao posto2
+	posto2.Fila = append(posto2.Fila, veiculo1)
+	posto2.QtdFila = 1
+
+	posto1.Fila = append(posto1.Fila, veiculo1)
+	posto1.QtdFila = 1
 
 	// adiciona os postos ao slice
 	postosMutex.Lock()
@@ -275,4 +231,3 @@ func listarPostos(w http.ResponseWriter, r *http.Request) {
 
 	//fmt.Printf("Postos listados: %s\n", string(postosJSON))
 }
->>>>>>> main
