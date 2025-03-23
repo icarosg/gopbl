@@ -1,16 +1,34 @@
 [
     {
-        "ID": "aksla",
-        "Latitude": 10,
-        "Longitude": 10,
+        "ID": "teste",
+        "Latitude": 50,
+        "Longitude": 50,
         "Bateria": 100,
-        "IsCarregando": false
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false
     },
     {
-        "ID": "34f",
+        "ID": "novo",
+        "Latitude": 30,
+        "Longitude": 30,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false
+    },
+    {
+        "ID": "aaa",
         "Latitude": 10,
         "Longitude": 10,
         "Bateria": 100,
-        "IsCarregando": false
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false
+    },
+    {
+        "ID": "new",
+        "Latitude": 60,
+        "Longitude": 60,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false
     }
 ]

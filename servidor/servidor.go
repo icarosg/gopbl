@@ -174,25 +174,57 @@ func salvarVeiculosNoArquivo() {
 	postosMutex.Lock()
 	defer postosMutex.Unlock()
 
-	veiculoJSON, err := json.MarshalIndent(veiculos, "", "    ")
-	if err != nil {
-		log.Fatalf("Erro ao converter veiculos para JSON: %s", err)
+	nomeArquivo := "veiculos.json"
+
+	veiculosExistentes := make(map[string]modelo.Veiculo)
+
+	// verifica se o arquivo já existe
+	if _, err := os.Stat(nomeArquivo); err == nil {
+		arquivo, err := os.Open(nomeArquivo)
+		if err != nil {
+			log.Fatalf("Erro ao abrir o arquivo: %s", err)
+		}
+		defer arquivo.Close()
+
+		var veiculosSalvos []modelo.Veiculo
+		if err := json.NewDecoder(arquivo).Decode(&veiculosSalvos); err != nil {
+			log.Printf("Erro ao ler JSON existente. Criando novo arquivo: %s", err)
+		}
+
+		// add a lista
+		for _, v := range veiculosSalvos {
+			veiculosExistentes[v.ID] = v
+		}
 	}
 
-	// escrever o JSON em um arquivo
-	file, err := os.Create("veiculos.json")
+	// add os novos veiculos
+	for _, v := range veiculos {
+		veiculosExistentes[v.ID] = *v
+	}
+
+	veiculosAtualizados := make([]modelo.Veiculo, 0, len(veiculosExistentes))
+	for _, v := range veiculosExistentes {
+		veiculosAtualizados = append(veiculosAtualizados, v)
+	}
+
+	veiculoJSON, err := json.MarshalIndent(veiculosAtualizados, "", "    ")
+	if err != nil {
+		log.Fatalf("Erro ao converter veículos para JSON: %s", err)
+	}
+
+	// abre o arquivo para escrita (substitui o conteúdo antigo)
+	arquivo, err := os.Create(nomeArquivo)
 	if err != nil {
 		log.Fatalf("Erro ao criar o arquivo: %s", err)
 	}
-	defer file.Close()
+	defer arquivo.Close()
 
-	_, err = file.Write(veiculoJSON)
+	_, err = arquivo.Write(veiculoJSON)
 	if err != nil {
 		log.Fatalf("Erro ao escrever no arquivo: %s", err)
 	}
 
-	log.Println("Veiculos salvos em veiculos.json")
-
+	log.Println("Veículos salvos em", nomeArquivo)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {

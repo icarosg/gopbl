@@ -47,7 +47,8 @@ func NovoPosto(id string, lat float64, long float64) Posto {
 	}
 }
 
-func ReservarVaga(p *Posto, v *Veiculo) bool { // retorna true se caso conseguir abastecer diretamente
+func ReservarVaga(p *Posto, v *Veiculo) bool { 
+	// retorna true se caso conseguir abastecer diretamente
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -121,7 +122,6 @@ func CarregarBateria(v *Veiculo) {
 	}()
 }
 
-// teste
 func TempoEstimado(p *Posto, tempoDistanciaVeiculo time.Duration) (time.Duration, int) {
 	tempo_total := tempoDistanciaVeiculo
 	posicao_na_fila := -1
@@ -138,8 +138,7 @@ func TempoEstimado(p *Posto, tempoDistanciaVeiculo time.Duration) (time.Duration
 		if veiculo.Latitude == p.Latitude && veiculo.Longitude == p.Longitude {
 			tempo_carregamento = time.Duration(100-veiculo.Bateria) * time.Minute
 		} else {
-			copiaVeiculo := p.Fila[i]
-			nivelBateriaAoChegarNoPosto := GetNivelBateriaAoChegarNoPosto(copiaVeiculo, p)
+			nivelBateriaAoChegarNoPosto := GetNivelBateriaAoChegarNoPosto(*veiculo, p)
 			tempo_carregamento = time.Duration(100-nivelBateriaAoChegarNoPosto) * time.Minute
 		}
 
