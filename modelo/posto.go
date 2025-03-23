@@ -3,7 +3,6 @@ package modelo
 import (
 	"fmt"
 	"math"
-	"net/http"
 	"sync"
 	"time"
 )
@@ -16,21 +15,6 @@ type Posto struct {
 	Fila         []*Veiculo
 	QtdFila      int
 	BombaOcupada bool
-}
-
-// Header implements http.ResponseWriter.
-func (p *Posto) Header() http.Header {
-	panic("unimplemented")
-}
-
-// Write implements http.ResponseWriter.
-func (p *Posto) Write([]byte) (int, error) {
-	panic("unimplemented")
-}
-
-// WriteHeader implements http.ResponseWriter.
-func (p *Posto) WriteHeader(statusCode int) {
-	panic("unimplemented")
 }
 
 func NovoPosto(id string, lat float64, long float64) Posto {
@@ -59,7 +43,8 @@ func ReservarVaga(p *Posto, v *Veiculo) bool {
 	}
 
 	p.Fila = append(p.Fila, v)
-	fmt.Printf("Posto %s: Veículo %s adicionado à fila de espera. Posição: %d", p.ID, v.ID, p.QtdFila)
+	p.QtdFila++
+	fmt.Printf("Posto %s: Veículo %s adicionado à fila de espera. Posição: %d\n\n", p.ID, v.ID, p.QtdFila)
 	return false
 }
 

@@ -63,11 +63,10 @@ func selecionarObjetivo() {
 	for {
 		if veiculo.ID != "" {
 			if !goroutineCriada {
-				ticker = time.NewTicker(2 * time.Second) // temporizador faz com que chame a função a cada dois segundos
+				ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada dois segundos
 				go func() {
 					for range ticker.C {
 						modelo.AtualizarLocalizacao(&veiculo)
-						fmt.Println("aqui")
 					}
 				}()
 				goroutineCriada = true
@@ -92,6 +91,7 @@ func selecionarObjetivo() {
 
 		case opcao == 2:
 			fmt.Println("Reservar vaga em um posto")
+			reservarVaga()
 
 		case opcao == 3:
 			fmt.Println("Listar todos os postos")
@@ -236,7 +236,7 @@ func listarPostos() []modelo.Posto {
 		fmt.Printf("ID: %s\n", posto.ID)
 		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
 		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-		fmt.Printf("Quantidade de carros na fila: %d\n", posto.QtdFila)
+		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
 		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
 		fmt.Println("----------------------------------------")
 	}
