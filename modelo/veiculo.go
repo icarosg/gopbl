@@ -28,11 +28,10 @@ func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
 }
 
 func AtualizarLocalizacao(v *Veiculo) {
-
 	//o defer garante que a liberação do bloqueio ocorra de maneira segura e sempre que a função terminar sua execução
 
-	v.Latitude += (rand.Float64() - 0.5) * 0.001
-	v.Longitude += (rand.Float64() - 0.5) * 0.001
+	v.Latitude += float64(rand.Intn(11) - 5) //valor entre 5 e -5
+	v.Longitude += float64(rand.Intn(11) - 5)
 
 	fmt.Println("local atual do veiculo: lat e longi", v.Latitude, v.Longitude)
 }

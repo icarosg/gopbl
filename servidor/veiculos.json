@@ -1,8 +1,50 @@
 [
     {
-        "ID": "asdjasdk",
-        "Latitude": 20,
-        "Longitude": 20,
+        "ID": "test",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "test",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "test",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "test",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "test",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "twst",
+        "Latitude": 12,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false
+    },
+    {
+        "ID": "test",
+        "Latitude": 0,
+        "Longitude": 0,
         "Bateria": 100,
         "IsCarregando": false
     }
