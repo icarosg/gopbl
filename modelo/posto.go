@@ -105,7 +105,7 @@ func CarregarBateria(v *Veiculo) {
 	}()
 }
 
-
+//teste
 func TempoEstimado(p *Posto, tempoDistanciaVeiculo time.Duration) (time.Duration, int) {
 	tempo_total := tempoDistanciaVeiculo
 	posicao_na_fila := -1
