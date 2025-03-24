@@ -9,8 +9,11 @@ services:
       - app-network
     volumes:
       - ./modelo:/app/modelo
+    restart: unless-stopped
 
   cliente:
+    stdin_open: true
+    tty: true
     build:
       context: .
       dockerfile: cliente.Dockerfile
@@ -22,6 +25,7 @@ services:
       - servidor
     volumes:
       - ./modelo:/app/modelo
+    restart: unless-stopped
 
 networks:
   app-network:

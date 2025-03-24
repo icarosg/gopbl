@@ -5,7 +5,7 @@ WORKDIR /app
 COPY ../go.mod ./
 RUN go mod download
 
-COPY ./cliente ./cliente
+COPY . .
 
 
 RUN go build -o cliente ./cliente/cliente.go
@@ -14,7 +14,7 @@ FROM alpine:latest
 
 WORKDIR /app
 COPY --from=builder /app/cliente .
-COPY --from=builder /app/modelo ./modelo  # Inclui a pasta modelo na imagem final
+#COPY --from=builder /app/modelo ./modelo  # Inclui a pasta modelo na imagem final
 
 EXPOSE 8081
 CMD ["./cliente"]

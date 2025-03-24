@@ -1,27 +1,12 @@
 [
     {
-        "ID": "teste",
+        "ID": "novooo",
         "Latitude": 50,
         "Longitude": 50,
         "Bateria": 100,
         "IsCarregando": false,
-        "IsDeslocandoAoPosto": false
-    },
-    {
-        "ID": "novo",
-        "Latitude": 30,
-        "Longitude": 30,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false
-    },
-    {
-        "ID": "aaa",
-        "Latitude": 10,
-        "Longitude": 10,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
     },
     {
         "ID": "new",
@@ -29,6 +14,43 @@
         "Longitude": 60,
         "Bateria": 100,
         "IsCarregando": false,
-        "IsDeslocandoAoPosto": false
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "teste",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "novo",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "aaa",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "test",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
     }
 ]

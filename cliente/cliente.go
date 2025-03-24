@@ -40,12 +40,11 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
-	resp, erro := http.Get("http://localhost:8080/conectar")
-
+	resp, erro := http.Get("http://servidor:8080/conectar")
 	if erro != nil {
-		fmt.Println("F TOTAL")
+		fmt.Println("Erro ao conectar ao servidor:", erro)
+		os.Exit(1) // Encerra o programa se não conseguir conectar
 	}
-
 	defer resp.Body.Close()
 	fmt.Println("Conectado!")
 
@@ -63,11 +62,10 @@ func selecionarObjetivo() {
 	for {
 		if veiculo.ID != "" {
 			if !goroutineCriada {
-				ticker = time.NewTicker(2 * time.Second) // temporizador faz com que chame a função a cada dois segundos
+				ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada dois segundos
 				go func() {
 					for range ticker.C {
 						modelo.AtualizarLocalizacao(&veiculo)
-						fmt.Println("aqui")
 					}
 				}()
 				goroutineCriada = true
@@ -92,6 +90,7 @@ func selecionarObjetivo() {
 
 		case opcao == 2:
 			fmt.Println("Reservar vaga em um posto")
+			reservarVaga()
 
 		case opcao == 3:
 			fmt.Println("Listar todos os postos")
@@ -198,7 +197,7 @@ func cadastrarVeiculo() {
 	}
 
 	//faço a requisiçao de POST pro servidor
-	post, err := http.Post("http://localhost:8080/cadastrar-veiculo", "application/json", bytes.NewBuffer(req))
+	post, err := http.Post("http://servidor:8080/cadastrar-veiculo", "application/json", bytes.NewBuffer(req))
 	if err != nil {
 		fmt.Printf("Erro ao cadastrar veículo: %v\n", err)
 		return
@@ -209,7 +208,7 @@ func cadastrarVeiculo() {
 
 func listarPostos() []modelo.Posto {
 	//fiz a requisicao para listar os postos GET
-	resp, erro := http.Get("http://localhost:8080/listar")
+	resp, erro := http.Get("http://servidor:8080/listar")
 	if erro != nil {
 		fmt.Println("Erro ao listar postos:", erro)
 		return nil
@@ -236,7 +235,7 @@ func listarPostos() []modelo.Posto {
 		fmt.Printf("ID: %s\n", posto.ID)
 		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
 		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-		fmt.Printf("Quantidade de carros na fila: %d\n", posto.QtdFila)
+		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
 		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
 		fmt.Println("----------------------------------------")
 	}
@@ -245,7 +244,7 @@ func listarPostos() []modelo.Posto {
 }
 
 func desconectarDoServidor() {
-	resp, erro := http.Get("http://localhost:8080/desconectar")
+	resp, erro := http.Get("http://servidor:8080/desconectar")
 
 	if erro != nil {
 		fmt.Println("F TOTAL")
@@ -265,7 +264,7 @@ func encontrarPostoRecomendado() {
 	}
 
 	// Faz a requisição POST para o servidor
-	resp, err := http.Post("http://localhost:8080/posto-recomendado", "application/json", bytes.NewBuffer(req))
+	resp, err := http.Post("http://servidor:8080/posto-recomendado", "application/json", bytes.NewBuffer(req))
 	if err != nil {
 		fmt.Printf("Erro ao enviar requisição: %v\n", err)
 		return

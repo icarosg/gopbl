@@ -38,6 +38,8 @@ var (
 	mutex                 sync.Mutex
 )
 
+var arquivoPostosCriados bool = false
+
 func main() {
 	http.HandleFunc("/conectar", conexao)
 	http.HandleFunc("/desconectar", desconectar)
@@ -46,9 +48,10 @@ func main() {
 	http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
 	http.HandleFunc("/posto-recomendado", postoRecomendado)
 	http.HandleFunc("/reservar-vaga", reservarVagaPosto)
+	http.HandleFunc("/pagamento", reservarVagaPosto)
 
 	fmt.Println("Servidor HTTP iniciado em http://localhost:8080")
-	erro := http.ListenAndServe("localhost:8080", nil)
+	erro := http.ListenAndServe("0.0.0.0:8080", nil)
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
 		os.Exit(1)
@@ -102,35 +105,14 @@ func getQtdClientes() int {
 }
 
 func inicializar() {
-	posto1 := &modelo.Posto{
-		ID:           "posto1",
-		Latitude:     10,
-		Longitude:    15,
-		Fila:         make([]*modelo.Veiculo, 0),
-		QtdFila:      0,
-		BombaOcupada: true,
-	}
-
-	posto2 := &modelo.Posto{
-		ID:           "posto2",
-		Latitude:     10,
-		Longitude:    10,
-		Fila:         make([]*modelo.Veiculo, 0),
-		QtdFila:      0,
-		BombaOcupada: true,
-	}
+	posto1 := modelo.NovoPosto("posto1", 10, 15)
+	posto2 := modelo.NovoPosto("posto2", 50, 50)
 
 	// Adiciona um veículo à fila do posto2 com coordenadas mais realistas
-	veiculo1 := &modelo.Veiculo{
-		ID:           "veiculo1",
-		Latitude:     10,
-		Longitude:    10,
-		Bateria:      20,
-		IsCarregando: false,
-	}
+	veiculo1 := modelo.NovoVeiculo("veiculo1", 30, 30)
 
 	// Adiciona o veículo apenas ao posto2
-	posto2.Fila = append(posto2.Fila, veiculo1)
+	posto2.Fila = append(posto2.Fila, &veiculo1)
 	posto2.QtdFila = 1
 
 	// posto1.Fila = append(posto1.Fila, veiculo1)
@@ -138,10 +120,13 @@ func inicializar() {
 
 	// adiciona os postos ao slice
 	postosMutex.Lock()
-	postos = append(postos, posto1, posto2)
+	postos = append(postos, &posto1, &posto2)
 	postosMutex.Unlock()
 
-	salvarPostosNoArquivo()
+	if !arquivoPostosCriados {
+		salvarPostosNoArquivo()
+		arquivoPostosCriados = true
+	}
 }
 
 func salvarPostosNoArquivo() {
@@ -170,11 +155,11 @@ func salvarPostosNoArquivo() {
 	log.Println("Postos salvos em postos.json")
 }
 
-func salvarVeiculosNoArquivo() {
+func salvarNoArquivo(nome string) {
 	postosMutex.Lock()
 	defer postosMutex.Unlock()
 
-	nomeArquivo := "veiculos.json"
+	nomeArquivo := nome
 
 	veiculosExistentes := make(map[string]modelo.Veiculo)
 
@@ -224,7 +209,7 @@ func salvarVeiculosNoArquivo() {
 		log.Fatalf("Erro ao escrever no arquivo: %s", err)
 	}
 
-	log.Println("Veículos salvos em", nomeArquivo)
+	//log.Println("Veículos salvos em", nomeArquivo)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -247,13 +232,13 @@ func cadastrarVeiculo(w http.ResponseWriter, r *http.Request) {
 
 	veiculos = append(veiculos, &veiculo)
 
-	salvarVeiculosNoArquivo()
+	salvarNoArquivo("veiculos.json")
 
 }
 
 func reservarVagaPosto(w http.ResponseWriter, r *http.Request) {
-	postosMutex.Lock()
-	defer postosMutex.Unlock()
+	// postosMutex.Lock()
+	// defer postosMutex.Unlock()
 
 	// decodifica o JSON do body da req
 	var pagamentoJson modelo.PagamentoJson
