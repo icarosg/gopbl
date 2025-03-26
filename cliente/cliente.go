@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopbl/modelo"
-	"io"
+
+	//"io"
+	"net"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -27,47 +26,88 @@ type RecomendadoResponse struct {
 	Posicao_na_fila int     `json:"posicao_na_fila"`
 }
 
+type Requisicao struct {
+	Comando string `json:"comando"`
+	// ClienteID string          `json:"cliente_id"`
+	Dados json.RawMessage `json:"dados"`
+}
+
 var opcao int
-var ( 
-	id string; latitude float64; longitude float64; //bateria   float64
+var (
+	id        string
+	latitude  float64
+	longitude float64 //bateria   float64
 )
 var veiculo modelo.Veiculo
 var ticker *time.Ticker
 var goroutineCriada bool
+var conexao net.Conn
 
 func main() {
-	// captura sinal em caso do cliente se desconectar
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-
-	resp, erro := http.Get("http://localhost:8080/conectar")
-
+	var erro error
+	conexao, erro = net.Dial("tcp", "localhost:8080")
 	if erro != nil {
-		fmt.Println("F TOTAL")
+		fmt.Println("Erro ao conectar ao servidor:", erro)
+		return
 	}
 
-	defer resp.Body.Close()
-	fmt.Println("Conectado!")
+	defer conexao.Close()
 
-	// lidar com a saída em caso de ctrl + c
-	go func() {
-		<-signalChan
-		desconectarDoServidor()
-		os.Exit(0)
-	}()
+	fmt.Println("Veículo conectado à porta:", conexao.RemoteAddr())
 
 	selecionarObjetivo()
+}
+
+func enviarRequisicao(req Requisicao) error {
+	dados, erro := json.Marshal(req)
+	if erro != nil {
+		fmt.Println("Erro ao codificar a requisição")
+		return erro
+	}
+
+	_, erro = conexao.Write(dados)
+
+	if erro != nil {
+		fmt.Println("Erro ao enviar a requisição")
+		return erro
+	}
+
+	return nil
+}
+
+func receberResposta() json.RawMessage {
+	buffer := make([]byte, 4096)
+
+	n, erro := conexao.Read(buffer)
+	if erro != nil {
+		fmt.Println("Erro ao receber a resposta")
+		return nil
+	}
+
+	var response Requisicao
+	erro = json.Unmarshal(buffer[:n], &response)
+	if erro != nil {
+		fmt.Println("Erro ao decodificar a resposta")
+	}
+
+	switch response.Comando {
+	case "listar-postos":
+		return response.Dados
+	case "encontrar-posto-recomendado":
+		return response.Dados
+	}
+
+	return nil
 }
 
 func selecionarObjetivo() {
 	for {
 		if veiculo.ID != "" {
 			if !goroutineCriada {
-				ticker = time.NewTicker(2 * time.Second) // temporizador faz com que chame a função a cada dois segundos
+				ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada dois segundos
 				go func() {
 					for range ticker.C {
 						modelo.AtualizarLocalizacao(&veiculo)
-						fmt.Println("aqui")
 					}
 				}()
 				goroutineCriada = true
@@ -92,6 +132,7 @@ func selecionarObjetivo() {
 
 		case opcao == 2:
 			fmt.Println("Reservar vaga em um posto")
+			reservarVaga()
 
 		case opcao == 3:
 			fmt.Println("Listar todos os postos")
@@ -129,7 +170,7 @@ func reservarVaga() {
 		fmt.Println("Posto não encontrado")
 		return
 	}
-	valorPraPagar := (100 - modelo.GetNivelBateriaAoChegarNoPosto(veiculo,posto_selecionado)) * 0.5 //0.5 reais por % nivel de bateria
+	valorPraPagar := (100 - modelo.GetNivelBateriaAoChegarNoPosto(veiculo, posto_selecionado)) * 0.5 //0.5 reais por % nivel de bateria
 	for {
 		fmt.Println("É necessario realizar o pagamento para reservar a vaga")
 		fmt.Printf("O valor a ser pago é de %.2f\n", valorPraPagar)
@@ -151,7 +192,7 @@ func reservarVaga() {
 	pagamentoFeito := modelo.PagamentoJson{
 		ID_veiculo: veiculo.ID,
 		Valor:      valorPraPagar,
-		ID_posto:      posto_selecionado.ID,
+		ID_posto:   posto_selecionado.ID,
 	}
 	req, err := json.Marshal(pagamentoFeito)
 	if err != nil {
@@ -177,7 +218,6 @@ func reservarVaga() {
 }
 
 func cadastrarVeiculo() {
-
 	fmt.Println("Digite o ID do veículo a ser cadastrado:")
 	fmt.Scanln(&id)
 	fmt.Println("Digite a latitude do veículo:")
@@ -187,46 +227,45 @@ func cadastrarVeiculo() {
 	// fmt.Println("Digite a procetagem de bateria do veículo:")
 	// fmt.Scanln(&bateria)
 
-	//fmt.Println("Veículo cadastrado com sucesso!")
 	veiculo = modelo.NovoVeiculo(id, longitude, latitude)
 
-	//converto o veiculo pra JSON
-	req, err := json.Marshal(veiculo)
-	if err != nil {
-		fmt.Printf("Erro ao converter veículo para JSON: %v\n", err)
+	veiculoJSON, erro := json.Marshal(veiculo)
+	if erro != nil {
+		fmt.Printf("Erro ao converter veículo para JSON: %v\n", erro)
 		return
 	}
 
-	//faço a requisiçao de POST pro servidor
-	post, err := http.Post("http://localhost:8080/cadastrar-veiculo", "application/json", bytes.NewBuffer(req))
-	if err != nil {
-		fmt.Printf("Erro ao cadastrar veículo: %v\n", err)
-		return
+	req := Requisicao{
+		Comando: "cadastrar-veiculo",
+		Dados:   veiculoJSON,
 	}
 
-	defer post.Body.Close()
+	erro = enviarRequisicao(req)
+
+	if erro == nil {
+		fmt.Println("Veículo cadastrado com sucesso")
+	}
 }
 
 func listarPostos() []modelo.Posto {
 	//fiz a requisicao para listar os postos GET
-	resp, erro := http.Get("http://localhost:8080/listar")
-	if erro != nil {
-		fmt.Println("Erro ao listar postos:", erro)
-		return nil
+	req := Requisicao{
+		Comando: "listar-postos",
 	}
 
-	//to lendo o corpo da resposta
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Erro ao ler resposta:", err)
+	enviarRequisicao(req)
+
+	resp := receberResposta()
+	if resp == nil {
+		fmt.Println("Erro ao listar postos")
 		return nil
 	}
 
 	//to convertendo o JSON para um slice de postos
 	var postos []modelo.Posto
-	err = json.Unmarshal(body, &postos)
-	if err != nil {
-		fmt.Println("Erro ao converter JSON:", err)
+	erro := json.Unmarshal(resp, &postos)
+	if erro != nil {
+		fmt.Println("Erro ao converter JSON:", erro)
 		return nil
 	}
 
@@ -236,7 +275,7 @@ func listarPostos() []modelo.Posto {
 		fmt.Printf("ID: %s\n", posto.ID)
 		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
 		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-		fmt.Printf("Quantidade de carros na fila: %d\n", posto.QtdFila)
+		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
 		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
 		fmt.Println("----------------------------------------")
 	}
@@ -244,44 +283,37 @@ func listarPostos() []modelo.Posto {
 	return postos
 }
 
-func desconectarDoServidor() {
-	resp, erro := http.Get("http://localhost:8080/desconectar")
-
-	if erro != nil {
-		fmt.Println("F TOTAL")
-		return
-	}
-
-	defer resp.Body.Close()
-	fmt.Println("Desconectado!")
-}
-//TESTANDO
+// TESTANDO
 func encontrarPostoRecomendado() {
+
+	//var requisicao Requisicao
+
 	// Converte o veículo para JSON
 	req, err := json.Marshal(veiculo)
 	if err != nil {
 		fmt.Printf("Erro ao converter veículo para JSON: %v\n", err)
 		return
 	}
+	requisicao := Requisicao{
+		Comando: "encontrar-posto-recomendado",
+		Dados:   req,
+	}
 
-	// Faz a requisição POST para o servidor
-	resp, err := http.Post("http://localhost:8080/posto-recomendado", "application/json", bytes.NewBuffer(req))
+	err = enviarRequisicao(requisicao)
 	if err != nil {
-		fmt.Printf("Erro ao enviar requisição: %v\n", err)
+		fmt.Println("Erro ao enviar requisição")
 		return
 	}
-	defer resp.Body.Close()
 
-	// Lê a resposta do servidor
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("Erro ao ler resposta: %v\n", err)
+	resposta := receberResposta()
+	if resposta == nil {
+		fmt.Println("Erro ao receber resposta")
 		return
 	}
 
 	// Converte a resposta JSON para a estrutura RecomendadoResponse
 	var recomendado modelo.RecomendadoResponse
-	err = json.Unmarshal(body, &recomendado)
+	err = json.Unmarshal(resposta, &recomendado)
 	if err != nil {
 		fmt.Printf("Erro ao converter resposta JSON: %v\n", err)
 		return

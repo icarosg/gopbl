@@ -1,17 +1,32 @@
-version: '3.8'
-
 services:
-  app:
+  servidor:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: go_server
+      dockerfile: servidor.Dockerfile
     ports:
       - "8080:8080"
     networks:
-      - go_network
+      - app-network
+    volumes:
+      - ./modelo:/app/modelo
+    restart: unless-stopped
+
+  cliente:
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: cliente.Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+    depends_on:
+      - servidor
+    volumes:
+      - ./modelo:/app/modelo
     restart: unless-stopped
 
 networks:
-  go_network:
+  app-network:
     driver: bridge

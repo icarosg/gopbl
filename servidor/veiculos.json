@@ -1,27 +1,21 @@
 [
     {
-        "ID": "teste",
+        "ID": "carro",
         "Latitude": 50,
         "Longitude": 50,
         "Bateria": 100,
         "IsCarregando": false,
-        "IsDeslocandoAoPosto": false
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
     },
     {
-        "ID": "novo",
-        "Latitude": 30,
-        "Longitude": 30,
+        "ID": "novooo",
+        "Latitude": 50,
+        "Longitude": 50,
         "Bateria": 100,
         "IsCarregando": false,
-        "IsDeslocandoAoPosto": false
-    },
-    {
-        "ID": "aaa",
-        "Latitude": 10,
-        "Longitude": 10,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
     },
     {
         "ID": "new",
@@ -29,6 +23,52 @@
         "Longitude": 60,
         "Bateria": 100,
         "IsCarregando": false,
-        "IsDeslocandoAoPosto": false
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "teste",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "novo",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "aaa",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "algo",
+        "Latitude": 70,
+        "Longitude": 70,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "test",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
     }
 ]
