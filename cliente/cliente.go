@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"gopbl/modelo"
 	"io"
+	"net"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -28,32 +26,25 @@ type RecomendadoResponse struct {
 }
 
 var opcao int
-var ( 
-	id string; latitude float64; longitude float64; //bateria   float64
+var (
+	id        string
+	latitude  float64
+	longitude float64 //bateria   float64
 )
 var veiculo modelo.Veiculo
 var ticker *time.Ticker
 var goroutineCriada bool
 
 func main() {
-	// captura sinal em caso do cliente se desconectar
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-
-	resp, erro := http.Get("http://servidor:8080/conectar")
+	conexao, erro := net.Dial("tcp", "localhost:8080")
 	if erro != nil {
 		fmt.Println("Erro ao conectar ao servidor:", erro)
-		os.Exit(1) // Encerra o programa se não conseguir conectar
+		return
 	}
-	defer resp.Body.Close()
-	fmt.Println("Conectado!")
 
-	// lidar com a saída em caso de ctrl + c
-	go func() {
-		<-signalChan
-		desconectarDoServidor()
-		os.Exit(0)
-	}()
+	defer conexao.Close()
+
+	fmt.Println("Veículo conectado à porta:", conexao.RemoteAddr())
 
 	selecionarObjetivo()
 }
@@ -128,7 +119,7 @@ func reservarVaga() {
 		fmt.Println("Posto não encontrado")
 		return
 	}
-	valorPraPagar := (100 - modelo.GetNivelBateriaAoChegarNoPosto(veiculo,posto_selecionado)) * 0.5 //0.5 reais por % nivel de bateria
+	valorPraPagar := (100 - modelo.GetNivelBateriaAoChegarNoPosto(veiculo, posto_selecionado)) * 0.5 //0.5 reais por % nivel de bateria
 	for {
 		fmt.Println("É necessario realizar o pagamento para reservar a vaga")
 		fmt.Printf("O valor a ser pago é de %.2f\n", valorPraPagar)
@@ -150,7 +141,7 @@ func reservarVaga() {
 	pagamentoFeito := modelo.PagamentoJson{
 		ID_veiculo: veiculo.ID,
 		Valor:      valorPraPagar,
-		ID_posto:      posto_selecionado.ID,
+		ID_posto:   posto_selecionado.ID,
 	}
 	req, err := json.Marshal(pagamentoFeito)
 	if err != nil {
@@ -243,18 +234,7 @@ func listarPostos() []modelo.Posto {
 	return postos
 }
 
-func desconectarDoServidor() {
-	resp, erro := http.Get("http://servidor:8080/desconectar")
-
-	if erro != nil {
-		fmt.Println("F TOTAL")
-		return
-	}
-
-	defer resp.Body.Close()
-	fmt.Println("Desconectado!")
-}
-//TESTANDO
+// TESTANDO
 func encontrarPostoRecomendado() {
 	// Converte o veículo para JSON
 	req, err := json.Marshal(veiculo)
