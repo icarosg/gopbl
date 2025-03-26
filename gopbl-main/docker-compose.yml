@@ -1,0 +1,32 @@
+services:
+  servidor:
+    build:
+      context: .
+      dockerfile: servidor.Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    volumes:
+      - ./modelo:/app/modelo
+    restart: unless-stopped
+
+  cliente:
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: cliente.Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+    depends_on:
+      - servidor
+    volumes:
+      - ./modelo:/app/modelo
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge

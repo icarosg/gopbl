@@ -1,0 +1,28 @@
+[
+    {
+        "ID": "posto1",
+        "Latitude": 10,
+        "Longitude": 15,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "posto2",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Fila": [
+            {
+                "ID": "veiculo1",
+                "Latitude": 30,
+                "Longitude": 30,
+                "Bateria": 100,
+                "IsCarregando": false,
+                "IsDeslocandoAoPosto": false,
+                "Pagamentos": null
+            }
+        ],
+        "QtdFila": 1,
+        "BombaOcupada": false
+    }
+]
