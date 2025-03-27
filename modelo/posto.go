@@ -72,6 +72,16 @@ func LiberarVaga(p *Posto) {
 	}
 }
 
+func GetPosFila(v Veiculo, p *Posto) int {
+	var pos int = 0
+	for i := range p.Fila{
+		if p.Fila[i].ID == v.ID {
+			pos = i
+		}
+	}
+	return pos
+}
+
 func GetBombaDisponivel(p *Posto) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
