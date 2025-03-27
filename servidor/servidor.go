@@ -8,7 +8,6 @@ import (
 	"log"
 	"math"
 	"net"
-
 	//"net/http"
 	"os"
 	"sync"
@@ -121,7 +120,6 @@ func cliente(conexao net.Conn) {
 
 		case "encontrar-posto-recomendado":
 			postoRecomendado(conexao, req)
-
 		case "reservar-vaga":
 			reservarVagaPosto(conexao, req)
 
@@ -278,7 +276,6 @@ func cadastrarVeiculo(req Requisicao) {
 	salvarNoArquivo("veiculos.json")
 
 	fmt.Println("Veículo cadastrado")
-
 }
 
 func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
