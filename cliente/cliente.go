@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopbl/modelo"
-
 	//"io"
 	"net"
 	"net/http"
@@ -285,20 +284,19 @@ func listarPostos() []modelo.Posto {
 
 // TESTANDO
 func encontrarPostoRecomendado() {
-
 	//var requisicao Requisicao
-
 	// Converte o veículo para JSON
 	req, err := json.Marshal(veiculo)
 	if err != nil {
 		fmt.Printf("Erro ao converter veículo para JSON: %v\n", err)
 		return
 	}
+  
 	requisicao := Requisicao{
 		Comando: "encontrar-posto-recomendado",
 		Dados:   req,
 	}
-
+  
 	err = enviarRequisicao(requisicao)
 	if err != nil {
 		fmt.Println("Erro ao enviar requisição")
