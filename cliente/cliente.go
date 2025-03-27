@@ -199,20 +199,36 @@ func reservarVaga() {
 		return
 	}
 
-	// Faz a requisição POST para o servidor
-	resp, err := http.Post("http://localhost:8080/pagamento", "application/json", bytes.NewBuffer(req))
-	if err != nil {
-		fmt.Printf("Erro ao enviar requisição: %v\n", err)
+	requisicao := Requisicao{
+		Comando: "reservar-vaga",
+		Dados:   req,
+	}
+
+	erro := enviarRequisicao(requisicao)
+
+	if erro != nil {
+		fmt.Println("erro ao enviar requisiçao")
+	}
+
+
+	resp := receberResposta()
+	if resp == nil {
+		fmt.Println("Erro ao listar postos")
 		return
 	}
 
-	defer resp.Body.Close()
+	//to convertendo o JSON para um slice de postos
+	var vagaFeita  RecomendadoResponse
+	erroo := json.Unmarshal(resp, &vagaFeita)
+	if erroo != nil {
+		fmt.Println("Erro ao converter JSON da resposta:", erroo)
+		return
+	}
 
-	// body, err := io.ReadAll(resp.Body)
-	// if err != nil {
-	// 	println("erro ao ler resposta do servidor")
-	// 	return
-	// }
+	fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
+	fmt.Println("latitude: ", vagaFeita.Latitude)
+	fmt.Println("longitude: ", vagaFeita.Longitude)
+	fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)		
 
 }
 

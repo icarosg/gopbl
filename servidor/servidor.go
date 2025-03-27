@@ -120,6 +120,9 @@ func cliente(conexao net.Conn) {
 
 		case "encontrar-posto-recomendado":
 			postoRecomendado(conexao, req)
+		case "reservar-vaga":
+			reservarVagaPosto(conexao, req)
+
 		}
 	}
 }
@@ -275,54 +278,69 @@ func cadastrarVeiculo(req Requisicao) {
 	fmt.Println("Veículo cadastrado")
 }
 
-// func reservarVagaPosto(w http.ResponseWriter, r *http.Request) {
-// 	// postosMutex.Lock()
-// 	// defer postosMutex.Unlock()
+func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
+	// postosMutex.Lock()
+	// defer postosMutex.Unlock()
 
-// 	// decodifica o JSON do body da req
-// 	var pagamentoJson modelo.PagamentoJson
-// 	err := json.NewDecoder(r.Body).Decode(&pagamentoJson)
-// 	if err != nil {
-// 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
-// 		return
-// 	}
+	// decodifica o JSON do body da req
+	var pagamentoJson modelo.PagamentoJson
+	err := json.Unmarshal(requisicao.Dados, &pagamentoJson)
+	if err != nil {
+		fmt.Println("Erro ao decodificar JSON")
+		return
+	}	
 
-// 	var veiculo *modelo.Veiculo
-// 	for i := range veiculos {
-// 		if veiculos[i].ID == pagamentoJson.ID_veiculo {
-// 			veiculo = veiculos[i]
-// 			break
-// 		}
-// 	}
+	var veiculo *modelo.Veiculo
+	for i := range veiculos {
+		if veiculos[i].ID == pagamentoJson.ID_veiculo {
+			veiculo = veiculos[i]
+			break
+		}
+	}
 
-// 	// procura o posto pelo ID
-// 	var posto *modelo.Posto
-// 	for i := range postos {
-// 		if postos[i].ID == pagamentoJson.ID_posto {
-// 			posto = postos[i]
-// 			break
-// 		}
-// 	}
+	// procura o posto pelo ID
+	var posto *modelo.Posto
+	for i := range postos {
+		if postos[i].ID == pagamentoJson.ID_posto {
+			posto = postos[i]
+			break
+		}
+	}
 
-// 	if posto == nil {
-// 		http.Error(w, "Posto não encontrado", http.StatusNotFound)
-// 		return
-// 	}
+	if posto == nil {
+		fmt.Println( "Posto não encontrado")
+		return
+	}
 
-// 	if veiculo == nil {
-// 		http.Error(w, "Veículo não encontrado", http.StatusNotFound)
-// 		return
-// 	}
+	if veiculo == nil {
+		fmt.Println( "Posto não encontrado")
+		return
+	}
 
-// 	reservado := modelo.ReservarVaga(posto, veiculo)
-// 	if reservado {
-// 		fmt.Printf("Vaga reservada com sucesso para o veículo %s no posto %s\n", veiculo.ID, posto.ID)
-// 		w.WriteHeader(http.StatusOK)
-// 	} else {
-// 		fmt.Printf("Veículo %s adicionado à fila do posto %s\n", veiculo.ID, posto.ID)
-// 		w.WriteHeader(http.StatusAccepted)
-// 	}
-// }
+	reservado := modelo.ReservarVaga(posto, veiculo)
+	if reservado {
+		fmt.Printf("Vaga reservada com sucesso para o veículo %s no posto %s\n", veiculo.ID, posto.ID)
+	} else {
+		fmt.Printf("Veículo %s adicionado à fila do posto %s\n", veiculo.ID, posto.ID)
+	}
+	resposta := modelo.RecomendadoResponse{
+		ID_posto:        posto.ID,
+		Latitude:        posto.Latitude,
+		Longitude:       posto.Longitude,
+		Posicao_na_fila: modelo.GetPosFila(*veiculo, posto),
+	}
+
+	respostaJSON, err := json.Marshal(resposta)
+	if err != nil {
+		fmt.Println("Erro ao codificar resposta")
+		return
+	}
+	respostaRequisicao := Requisicao{
+		Comando: "reservar-vaga",
+		Dados:   respostaJSON,
+	}
+	enviarResposta(conexao, respostaRequisicao)
+}
 
 func postoRecomendado(conexao net.Conn, req Requisicao) {
 	postosMutex.Lock()
