@@ -8,7 +8,7 @@ import (
 	"log"
 	"math"
 	"net"
-	"net/http"
+	//"net/http"
 	"os"
 	"sync"
 	"time"
@@ -28,6 +28,11 @@ type PagamentoJson struct {
 	Posto      string  `json:"id_posto"`
 }
 
+type Requisicao struct {
+	Comando string          `json:"comando"`
+	Dados   json.RawMessage `json:"dados"`
+}
+
 var (
 	postosMutex sync.Mutex
 	postos      []*modelo.Posto // Slice para armazenar todos os postos
@@ -43,12 +48,12 @@ var (
 var arquivoPostosCriados bool = false
 
 func main() {
-	http.HandleFunc("/posto", handler)
-	http.HandleFunc("/listar", listarPostos)
-	http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
-	http.HandleFunc("/posto-recomendado", postoRecomendado)
-	http.HandleFunc("/reservar-vaga", reservarVagaPosto)
-	http.HandleFunc("/pagamento", reservarVagaPosto)
+	// http.HandleFunc("/posto", handler)
+	// http.HandleFunc("/listar", listarPostos)
+	// http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
+	// http.HandleFunc("/posto-recomendado", postoRecomendado)
+	// http.HandleFunc("/reservar-vaga", reservarVagaPosto)
+	// http.HandleFunc("/pagamento", reservarVagaPosto)
 
 	// cria um listener TCP na porta 8080
 	listener, erro := net.Listen("tcp", "localhost:8080")
@@ -87,14 +92,34 @@ func cliente(conexao net.Conn) {
 		conexao.Close()
 	}() // decrementa após a conexão ser encerrada
 
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 4096)
 	for {
-		_, erro := conexao.Read(buffer)
+		n, erro := conexao.Read(buffer)
 		if erro != nil {
 			if erro == io.EOF {
 				fmt.Printf("O cliente %s fechou a conexão\n", conexao.RemoteAddr())
 			}
 			break
+		}
+
+		var req Requisicao
+
+		erro = json.Unmarshal(buffer[:n], &req)
+
+		if erro != nil {
+			fmt.Println("Erro ao decodificar a requisição")
+			continue
+		}
+
+		switch req.Comando {
+		case "cadastrar-veiculo":
+			cadastrarVeiculo(req)
+
+		case "listar-postos":
+			listarPostos(conexao)
+
+		case "encontrar-posto-recomendado":
+			postoRecomendado(conexao, req)
 		}
 	}
 }
@@ -225,21 +250,21 @@ func salvarNoArquivo(nome string) {
 	//log.Println("Veículos salvos em", nomeArquivo)
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "postos.json")
-}
+// func handler(w http.ResponseWriter, r *http.Request) {
+// 	http.ServeFile(w, r, "postos.json")
+// }
 
-func cadastrarVeiculo(w http.ResponseWriter, r *http.Request) {
+func cadastrarVeiculo(req Requisicao) {
 	//aki tava travando o sistema
 	// postosMutex.Lock()
 	// defer postosMutex.Unlock()
 
 	// decodifica o JSON do body da req
 	var veiculo modelo.Veiculo
-	err := json.NewDecoder(r.Body).Decode(&veiculo)
+	erro := json.Unmarshal(req.Dados, &veiculo)
 
-	if err != nil {
-		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+	if erro != nil {
+		fmt.Println("Erro ao cadastrar o veículo")
 		return
 	}
 
@@ -247,65 +272,67 @@ func cadastrarVeiculo(w http.ResponseWriter, r *http.Request) {
 
 	salvarNoArquivo("veiculos.json")
 
+	fmt.Println("Veículo cadastrado")
 }
 
-func reservarVagaPosto(w http.ResponseWriter, r *http.Request) {
-	// postosMutex.Lock()
-	// defer postosMutex.Unlock()
+// func reservarVagaPosto(w http.ResponseWriter, r *http.Request) {
+// 	// postosMutex.Lock()
+// 	// defer postosMutex.Unlock()
 
-	// decodifica o JSON do body da req
-	var pagamentoJson modelo.PagamentoJson
-	err := json.NewDecoder(r.Body).Decode(&pagamentoJson)
-	if err != nil {
-		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
-		return
-	}
+// 	// decodifica o JSON do body da req
+// 	var pagamentoJson modelo.PagamentoJson
+// 	err := json.NewDecoder(r.Body).Decode(&pagamentoJson)
+// 	if err != nil {
+// 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+// 		return
+// 	}
 
-	var veiculo *modelo.Veiculo
-	for i := range veiculos {
-		if veiculos[i].ID == pagamentoJson.ID_veiculo {
-			veiculo = veiculos[i]
-			break
-		}
-	}
+// 	var veiculo *modelo.Veiculo
+// 	for i := range veiculos {
+// 		if veiculos[i].ID == pagamentoJson.ID_veiculo {
+// 			veiculo = veiculos[i]
+// 			break
+// 		}
+// 	}
 
-	// procura o posto pelo ID
-	var posto *modelo.Posto
-	for i := range postos {
-		if postos[i].ID == pagamentoJson.ID_posto {
-			posto = postos[i]
-			break
-		}
-	}
+// 	// procura o posto pelo ID
+// 	var posto *modelo.Posto
+// 	for i := range postos {
+// 		if postos[i].ID == pagamentoJson.ID_posto {
+// 			posto = postos[i]
+// 			break
+// 		}
+// 	}
 
-	if posto == nil {
-		http.Error(w, "Posto não encontrado", http.StatusNotFound)
-		return
-	}
+// 	if posto == nil {
+// 		http.Error(w, "Posto não encontrado", http.StatusNotFound)
+// 		return
+// 	}
 
-	if veiculo == nil {
-		http.Error(w, "Veículo não encontrado", http.StatusNotFound)
-		return
-	}
+// 	if veiculo == nil {
+// 		http.Error(w, "Veículo não encontrado", http.StatusNotFound)
+// 		return
+// 	}
 
-	reservado := modelo.ReservarVaga(posto, veiculo)
-	if reservado {
-		fmt.Printf("Vaga reservada com sucesso para o veículo %s no posto %s\n", veiculo.ID, posto.ID)
-		w.WriteHeader(http.StatusOK)
-	} else {
-		fmt.Printf("Veículo %s adicionado à fila do posto %s\n", veiculo.ID, posto.ID)
-		w.WriteHeader(http.StatusAccepted)
-	}
-}
+// 	reservado := modelo.ReservarVaga(posto, veiculo)
+// 	if reservado {
+// 		fmt.Printf("Vaga reservada com sucesso para o veículo %s no posto %s\n", veiculo.ID, posto.ID)
+// 		w.WriteHeader(http.StatusOK)
+// 	} else {
+// 		fmt.Printf("Veículo %s adicionado à fila do posto %s\n", veiculo.ID, posto.ID)
+// 		w.WriteHeader(http.StatusAccepted)
+// 	}
+// }
 
-func postoRecomendado(w http.ResponseWriter, r *http.Request) {
+func postoRecomendado(conexao net.Conn, req Requisicao) {
 	postosMutex.Lock()
 	defer postosMutex.Unlock()
 
 	var veiculo modelo.Veiculo
-	err := json.NewDecoder(r.Body).Decode(&veiculo)
+	err := json.Unmarshal(req.Dados, &veiculo)
+
 	if err != nil {
-		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+		fmt.Println("Erro ao achar posto recomendado")
 		return
 	}
 
@@ -345,27 +372,48 @@ func postoRecomendado(w http.ResponseWriter, r *http.Request) {
 
 	respostaJSON, err := json.Marshal(recomendadoResponse)
 	if err != nil {
-		http.Error(w, "Erro ao converter resposta para JSON", http.StatusInternalServerError)
+		fmt.Println("Erro ao codificar posto recomendado")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(respostaJSON)
+	response := Requisicao{
+		Comando: "posto-recomendado",
+		Dados:   respostaJSON,
+	}
+
+	enviarResposta(conexao, response)
 }
 
-func listarPostos(w http.ResponseWriter, r *http.Request) {
+func listarPostos(conexao net.Conn) {
 	postosMutex.Lock()
 	defer postosMutex.Unlock()
 
 	// converte a lista de postos para JSON
-	postosJSON, err := json.Marshal(postos)
-	if err != nil {
-		http.Error(w, "Erro ao converter postos para JSON", http.StatusInternalServerError)
+	postosJSON, erro := json.Marshal(postos)
+	if erro != nil {
+		fmt.Println("Erro ao codificar postos")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json") // define o cabeçalho da resposta como JSON
-	w.Write(postosJSON)                                // escrever o JSON na resposta
+	response := Requisicao{
+		Comando: "listar-postos",
+		Dados:   postosJSON,
+	}
+
+	enviarResposta(conexao, response)
 
 	//fmt.Printf("Postos listados: %s\n", string(postosJSON))
+}
+
+func enviarResposta(conexao net.Conn, resposta Requisicao) {
+	dados, erro := json.Marshal(resposta)
+	if erro != nil {
+		fmt.Printf("Erro ao codificar resposta: %v", erro)
+		return
+	}
+
+	_, erro = conexao.Write(dados)
+	if erro != nil {
+		log.Printf("Erro ao enviar resposta: %v", erro)
+	}
 }
