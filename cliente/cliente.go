@@ -1,13 +1,10 @@
 package main
 
 import (
-	//"bytes"
 	"encoding/json"
 	"fmt"
 	"gopbl/modelo"
-	//"io"
 	"net"
-	//"net/http"
 	"time"
 )
 
@@ -26,9 +23,8 @@ type RecomendadoResponse struct {
 }
 
 type Requisicao struct {
-	Comando string `json:"comando"`
-	// ClienteID string          `json:"cliente_id"`
-	Dados json.RawMessage `json:"dados"`
+	Comando string          `json:"comando"`
+	Dados   json.RawMessage `json:"dados"`
 }
 
 var opcao int
@@ -94,6 +90,8 @@ func receberResposta() json.RawMessage {
 		return response.Dados
 	case "encontrar-posto-recomendado":
 		return response.Dados
+	case "listar-veiculos":
+		return response.Dados
 	}
 
 	return nil
@@ -113,12 +111,17 @@ func selecionarObjetivo() {
 			}
 		}
 
-		fmt.Println("veiculo id", veiculo.ID)
+		if veiculo.ID != "" {
+			fmt.Printf("O ID DO SEU VEÍCULO É: %s. \nLONGITUDE E LATITUDE: %v, %v. \nBATERIA: %v\n\n\n", veiculo.ID, veiculo.Longitude, veiculo.Latitude, veiculo.Bateria)
+		} else {
+			fmt.Println("Você ainda não possui um veículo.")
+		}
 
 		fmt.Printf("Digite 0 para cadastrar seu veículo\n")
-		fmt.Print("Digite 1 para encontrar posto recomendado\n")
-		fmt.Printf("Digite 2 para reservar vaga em um posto\n")
-		fmt.Printf("Digite 3 para listar todos os postos\n")
+		fmt.Printf("Digite 1 para listar os veículos e importar algum\n")
+		fmt.Print("Digite 2 para encontrar posto recomendado\n")
+		fmt.Printf("Digite 3 para reservar vaga em um posto\n")
+		fmt.Printf("Digite 4 para listar todos os postos\n")
 		fmt.Scanln(&opcao)
 		switch {
 		case opcao == 0:
@@ -126,14 +129,18 @@ func selecionarObjetivo() {
 			cadastrarVeiculo()
 
 		case opcao == 1:
+			fmt.Println("Listar e importar veículo")
+			listarEImportarVeiculo()
+
+		case opcao == 2:
 			fmt.Println("Encontrar posto recomendado")
 			encontrarPostoRecomendado()
 
-		case opcao == 2:
+		case opcao == 3:
 			fmt.Println("Reservar vaga em um posto")
 			reservarVaga()
 
-		case opcao == 3:
+		case opcao == 4:
 			fmt.Println("Listar todos os postos")
 			listarPostos()
 
@@ -141,6 +148,169 @@ func selecionarObjetivo() {
 			fmt.Println("Opção inválida")
 		}
 	}
+}
+
+func cadastrarVeiculo() {
+	fmt.Println("Digite o ID do veículo a ser cadastrado:")
+	fmt.Scanln(&id)
+	fmt.Println("Digite a latitude do veículo:")
+	fmt.Scanln(&latitude)
+	fmt.Println("Digite a longitude do veículo:")
+	fmt.Scanln(&longitude)
+	// fmt.Println("Digite a procetagem de bateria do veículo:")
+	// fmt.Scanln(&bateria)
+
+	veiculo = modelo.NovoVeiculo(id, longitude, latitude)
+
+	veiculoJSON, erro := json.Marshal(veiculo)
+	if erro != nil {
+		fmt.Printf("Erro ao converter veículo para JSON: %v\n", erro)
+		return
+	}
+
+	req := Requisicao{
+		Comando: "cadastrar-veiculo",
+		Dados:   veiculoJSON,
+	}
+
+	erro = enviarRequisicao(req)
+
+	if erro == nil {
+		fmt.Println("Veículo cadastrado com sucesso")
+	}
+}
+
+func listarEImportarVeiculo() []modelo.Veiculo {
+	req := Requisicao{
+		Comando: "listar-veiculos",
+	}
+
+	enviarRequisicao(req)
+
+	resp := receberResposta()
+	if resp == nil {
+		fmt.Println("Erro ao listar veículos")
+		return nil
+	}
+
+	//to convertendo o JSON para um slice de veiculos
+	var veiculos []modelo.Veiculo
+	erro := json.Unmarshal(resp, &veiculos)
+	if erro != nil {
+		fmt.Println("Erro ao converter JSON:", erro)
+		return nil
+	}
+
+	for i := range veiculos {
+		veiculo := &veiculos[i]
+		fmt.Printf("ID: %s\n", veiculo.ID)
+		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+		fmt.Printf("Nível da bateria %.2f\n", veiculo.Bateria)
+		fmt.Println("----------------------------------------")
+	}
+
+	fmt.Println("Digite o ID do veículo que deseja importar: ")
+	var idVeiculo string
+	fmt.Scanln(&idVeiculo)
+
+	var veiculoEncontrado bool = false
+	var veiculo_selecionado *modelo.Veiculo
+
+	for i := range veiculos {
+		v := &veiculos[i]
+		if v.ID == idVeiculo {
+			veiculoEncontrado = true
+			veiculo_selecionado = v
+			break
+		}
+	}
+	if !veiculoEncontrado {
+		fmt.Println("Veículo não encontrado")
+		return nil
+	} else {
+		veiculo = *veiculo_selecionado
+		fmt.Println("Veículo importado com sucesso!")
+	}
+
+	return veiculos
+}
+
+func listarPostos() []modelo.Posto {
+	//fiz a requisicao para listar os postos GET
+	req := Requisicao{
+		Comando: "listar-postos",
+	}
+
+	enviarRequisicao(req)
+
+	resp := receberResposta()
+	if resp == nil {
+		fmt.Println("Erro ao listar postos")
+		return nil
+	}
+
+	//to convertendo o JSON para um slice de postos
+	var postos []modelo.Posto
+	erro := json.Unmarshal(resp, &postos)
+	if erro != nil {
+		fmt.Println("Erro ao converter JSON:", erro)
+		return nil
+	}
+
+	//printando as informacoes dos postos
+	for i := range postos {
+		posto := &postos[i]
+		fmt.Printf("ID: %s\n", posto.ID)
+		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
+		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
+		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
+		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
+		fmt.Println("----------------------------------------")
+	}
+
+	return postos
+}
+
+func encontrarPostoRecomendado() {
+	//var requisicao Requisicao
+	req, err := json.Marshal(veiculo)
+	if err != nil {
+		fmt.Printf("Erro ao converter veículo para JSON: %v\n", err)
+		return
+	}
+
+	requisicao := Requisicao{
+		Comando: "encontrar-posto-recomendado",
+		Dados:   req,
+	}
+
+	err = enviarRequisicao(requisicao)
+	if err != nil {
+		fmt.Println("Erro ao enviar requisição")
+		return
+	}
+
+	resposta := receberResposta()
+	if resposta == nil {
+		fmt.Println("Erro ao receber resposta")
+		return
+	}
+
+	// converte a resposta JSON para a estrutura RecomendadoResponse
+	var recomendado modelo.RecomendadoResponse
+	err = json.Unmarshal(resposta, &recomendado)
+	if err != nil {
+		fmt.Printf("Erro ao converter resposta JSON: %v\n", err)
+		return
+	}
+
+	fmt.Println("*******************************************************")
+	fmt.Printf("Posto recomendado: %s\n", recomendado.ID_posto)
+	fmt.Printf("Latitude: %.4f\n", recomendado.Latitude)
+	fmt.Printf("Longitude: %.4f\n", recomendado.Longitude)
+	fmt.Printf("Posição na fila: %d\n", recomendado.Posicao_na_fila)
+	fmt.Println("*******************************************************")
 }
 
 func reservarVaga() {
@@ -210,7 +380,6 @@ func reservarVaga() {
 		fmt.Println("erro ao enviar requisiçao")
 	}
 
-
 	resp := receberResposta()
 	if resp == nil {
 		fmt.Println("Erro ao listar postos")
@@ -218,7 +387,7 @@ func reservarVaga() {
 	}
 
 	//to convertendo o JSON para um slice de postos
-	var vagaFeita  RecomendadoResponse
+	var vagaFeita RecomendadoResponse
 	erroo := json.Unmarshal(resp, &vagaFeita)
 	if erroo != nil {
 		fmt.Println("Erro ao converter JSON da resposta:", erroo)
@@ -228,114 +397,6 @@ func reservarVaga() {
 	fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
 	fmt.Println("latitude: ", vagaFeita.Latitude)
 	fmt.Println("longitude: ", vagaFeita.Longitude)
-	fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)		
+	fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
 
-}
-
-func cadastrarVeiculo() {
-	fmt.Println("Digite o ID do veículo a ser cadastrado:")
-	fmt.Scanln(&id)
-	fmt.Println("Digite a latitude do veículo:")
-	fmt.Scanln(&latitude)
-	fmt.Println("Digite a longitude do veículo:")
-	fmt.Scanln(&longitude)
-	// fmt.Println("Digite a procetagem de bateria do veículo:")
-	// fmt.Scanln(&bateria)
-
-	veiculo = modelo.NovoVeiculo(id, longitude, latitude)
-
-	veiculoJSON, erro := json.Marshal(veiculo)
-	if erro != nil {
-		fmt.Printf("Erro ao converter veículo para JSON: %v\n", erro)
-		return
-	}
-
-	req := Requisicao{
-		Comando: "cadastrar-veiculo",
-		Dados:   veiculoJSON,
-	}
-
-	erro = enviarRequisicao(req)
-
-	if erro == nil {
-		fmt.Println("Veículo cadastrado com sucesso")
-	}
-}
-
-func listarPostos() []modelo.Posto {
-	//fiz a requisicao para listar os postos GET
-	req := Requisicao{
-		Comando: "listar-postos",
-	}
-
-	enviarRequisicao(req)
-
-	resp := receberResposta()
-	if resp == nil {
-		fmt.Println("Erro ao listar postos")
-		return nil
-	}
-
-	//to convertendo o JSON para um slice de postos
-	var postos []modelo.Posto
-	erro := json.Unmarshal(resp, &postos)
-	if erro != nil {
-		fmt.Println("Erro ao converter JSON:", erro)
-		return nil
-	}
-
-	//printando as informacoes dos postos
-	for i := range postos {
-		posto := &postos[i]
-		fmt.Printf("ID: %s\n", posto.ID)
-		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
-		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
-		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
-		fmt.Println("----------------------------------------")
-	}
-
-	return postos
-}
-
-// TESTANDO
-func encontrarPostoRecomendado() {
-	//var requisicao Requisicao
-	req, err := json.Marshal(veiculo)
-	if err != nil {
-		fmt.Printf("Erro ao converter veículo para JSON: %v\n", err)
-		return
-	}
-  
-	requisicao := Requisicao{
-		Comando: "encontrar-posto-recomendado",
-		Dados:   req,
-	}
-  
-	err = enviarRequisicao(requisicao)
-	if err != nil {
-		fmt.Println("Erro ao enviar requisição")
-		return
-	}
-
-	resposta := receberResposta()
-	if resposta == nil {
-		fmt.Println("Erro ao receber resposta")
-		return
-	}
-
-	// converte a resposta JSON para a estrutura RecomendadoResponse
-	var recomendado modelo.RecomendadoResponse
-	err = json.Unmarshal(resposta, &recomendado)
-	if err != nil {
-		fmt.Printf("Erro ao converter resposta JSON: %v\n", err)
-		return
-	}
-
-	fmt.Println("*******************************************************")
-	fmt.Printf("Posto recomendado: %s\n", recomendado.ID_posto)
-	fmt.Printf("Latitude: %.4f\n", recomendado.Latitude)
-	fmt.Printf("Longitude: %.4f\n", recomendado.Longitude)
-	fmt.Printf("Posição na fila: %d\n", recomendado.Posicao_na_fila)
-	fmt.Println("*******************************************************")
 }

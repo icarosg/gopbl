@@ -115,11 +115,15 @@ func cliente(conexao net.Conn) {
 		case "cadastrar-veiculo":
 			cadastrarVeiculo(req)
 
+		case "listar-veiculos":
+			listarVeiculos(conexao)
+
 		case "listar-postos":
 			listarPostos(conexao)
 
 		case "encontrar-posto-recomendado":
 			postoRecomendado(conexao, req)
+
 		case "reservar-vaga":
 			reservarVagaPosto(conexao, req)
 
@@ -278,6 +282,53 @@ func cadastrarVeiculo(req Requisicao) {
 	fmt.Println("Veículo cadastrado")
 }
 
+func listarVeiculos(conexao net.Conn) {
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
+
+	nomeArquivo := "veiculos.json"
+	veiculosExistentes := make(map[string]modelo.Veiculo)
+
+	// verifica se o arquivo já existe
+	if _, err := os.Stat(nomeArquivo); err == nil {
+		arquivo, err := os.Open(nomeArquivo)
+		if err != nil {
+			log.Fatalf("Erro ao abrir o arquivo: %s", err)
+		}
+		defer arquivo.Close()
+
+		var veiculosSalvos []modelo.Veiculo
+		if err := json.NewDecoder(arquivo).Decode(&veiculosSalvos); err != nil {
+			log.Printf("Erro ao ler JSON existente.")
+		}
+
+		// add a lista
+		for _, v := range veiculosSalvos {
+			veiculosExistentes[v.ID] = v
+		}
+
+		veiculosAtualizados := make([]modelo.Veiculo, 0, len(veiculosExistentes))
+		for _, v := range veiculosExistentes {
+			veiculosAtualizados = append(veiculosAtualizados, v)
+		}
+
+		veiculosJSON, erro := json.Marshal(veiculosAtualizados)
+		if erro != nil {
+			fmt.Println("Erro ao codificar os veículos")
+			return
+		}
+
+		response := Requisicao{
+			Comando: "listar-veiculos",
+			Dados:   veiculosJSON,
+		}
+
+		enviarResposta(conexao, response)
+	} else {
+		fmt.Println("Arquivo de veículos inexistente.")
+	}
+}
+
 func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 	// postosMutex.Lock()
 	// defer postosMutex.Unlock()
@@ -288,7 +339,7 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 	if err != nil {
 		fmt.Println("Erro ao decodificar JSON")
 		return
-	}	
+	}
 
 	var veiculo *modelo.Veiculo
 	for i := range veiculos {
@@ -308,12 +359,12 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 	}
 
 	if posto == nil {
-		fmt.Println( "Posto não encontrado")
+		fmt.Println("Posto não encontrado")
 		return
 	}
 
 	if veiculo == nil {
-		fmt.Println( "Posto não encontrado")
+		fmt.Println("Posto não encontrado")
 		return
 	}
 
