@@ -395,7 +395,7 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 	}
 
 	response := Requisicao{
-		Comando: "posto-recomendado",
+		Comando: "encontrar-posto-recomendado",
 		Dados:   respostaJSON,
 	}
 

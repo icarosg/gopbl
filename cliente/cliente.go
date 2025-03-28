@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/json"
 	"fmt"
 	"gopbl/modelo"
 	//"io"
 	"net"
-	"net/http"
+	//"net/http"
 	"time"
 )
 
@@ -301,7 +301,6 @@ func listarPostos() []modelo.Posto {
 // TESTANDO
 func encontrarPostoRecomendado() {
 	//var requisicao Requisicao
-	// Converte o veículo para JSON
 	req, err := json.Marshal(veiculo)
 	if err != nil {
 		fmt.Printf("Erro ao converter veículo para JSON: %v\n", err)
@@ -325,7 +324,7 @@ func encontrarPostoRecomendado() {
 		return
 	}
 
-	// Converte a resposta JSON para a estrutura RecomendadoResponse
+	// converte a resposta JSON para a estrutura RecomendadoResponse
 	var recomendado modelo.RecomendadoResponse
 	err = json.Unmarshal(resposta, &recomendado)
 	if err != nil {
@@ -333,7 +332,6 @@ func encontrarPostoRecomendado() {
 		return
 	}
 
-	// Exibe as informações do posto recomendado
 	fmt.Println("*******************************************************")
 	fmt.Printf("Posto recomendado: %s\n", recomendado.ID_posto)
 	fmt.Printf("Latitude: %.4f\n", recomendado.Latitude)
