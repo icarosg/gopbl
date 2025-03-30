@@ -45,6 +45,14 @@ var (
 	mutex                 sync.Mutex
 )
 
+var opcao int
+var (
+	id          string
+	latitude    float64
+	longitude   float64
+	selecionado *modelo.Posto
+)
+
 var arquivoPostosCriados bool = false
 
 func main() {
@@ -81,8 +89,108 @@ func main() {
 		fmt.Println("Total de clientes conectados:", getQtdClientes())
 
 		go cliente(conexao)
+		go AtualizarFilas()
+
+		menu()
 	}
 
+}
+
+func menu(){
+		fmt.Printf("Digite 0 para cadastrar um posto\n")
+		fmt.Printf("Digite 1 para listar os postos\n")
+		fmt.Printf("Digite 2 para selecionar um posto e exibir a fila de veiculos\n")
+		fmt.Printf("Digite 3 para listar os veiculos\n")		
+		fmt.Scanln(&opcao)
+		switch {
+		case opcao == 0:
+			fmt.Println("Cadastrar posto")
+			cadastrarPosto()
+		case opcao == 1:
+			fmt.Println("Listar postos")
+			listarPostosServidor()
+
+		case opcao == 2:
+			fmt.Println("Digite o id do posto que deseja selecionar:")
+			fmt.Scanln(&id)
+			for i := range postos {
+				if postos[i].ID == id {
+					selecionado = postos[i]
+					exibirFilaPosto(selecionado)
+					break
+				}
+			}		
+
+		case opcao == 3:
+			fmt.Println("listar veiculos")
+			listarVeiculosServidor()		
+
+		default:
+			fmt.Println("Opção inválida")
+		}
+}
+
+func cadastrarPosto(){
+	fmt.Println("Cadastrar posto")
+	fmt.Println("Digite o ID do posto:")
+	fmt.Scanln(&id)
+	fmt.Println("Digite a latitude do posto:")
+	fmt.Scanln(&latitude)
+	fmt.Println("Digite a longitude do posto:")
+	fmt.Scanln(&longitude)
+
+	novoPosto := modelo.NovoPosto(id, latitude, longitude)
+
+	postosMutex.Lock()
+	postos = append(postos, &novoPosto)
+	postosMutex.Unlock()
+
+	salvarPostosNoArquivo()
+
+	fmt.Println("Posto cadastrado com sucesso!")
+}
+
+func listarPostosServidor(){
+	for i := range postos {
+		posto := postos[i]
+		fmt.Printf("ID: %s\n", posto.ID)
+		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
+		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
+		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
+		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
+		fmt.Println("----------------------------------------")
+	}
+}
+
+func listarVeiculosServidor(){
+	for i := range veiculos {
+		veiculo := veiculos[i]
+		fmt.Printf("ID: %s\n", veiculo.ID)
+		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+		fmt.Println("----------------------------------------")
+	}
+}
+
+func exibirFilaPosto(posto *modelo.Posto) {
+	fmt.Printf("Fila do posto %s:\n", posto.ID)
+	for i := range posto.Fila {
+		veiculo := posto.Fila[i]
+		fmt.Printf("ID: %s\n", veiculo.ID)
+		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
+		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
+		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
+		fmt.Println("----------------------------------------")
+	}
+}
+
+func AtualizarFilas(){
+	for i := range postos {
+		p := postos[i]
+		go modelo.ArrumarPosicaoFila(p)	
+	}
 }
 
 func cliente(conexao net.Conn) {
