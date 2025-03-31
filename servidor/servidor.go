@@ -52,6 +52,8 @@ var (
 	longitude   float64
 	selecionado *modelo.Posto
 )
+var goroutineCriada bool
+var ticker *time.Ticker
 
 var arquivoPostosCriados bool = false
 
@@ -74,6 +76,18 @@ func main() {
 	fmt.Println("Servidor iniciado em localhost:8080")
 	inicializar()
 
+	if postos != nil {
+		if !goroutineCriada {
+			ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada 5 segundos
+			go func() {
+				for range ticker.C {
+					AtualizarFilas()
+				}
+			}()
+			goroutineCriada = true
+		}
+	}
+
 	for {
 		conexao, erro := listener.Accept()
 
@@ -91,46 +105,46 @@ func main() {
 		go cliente(conexao)
 		go AtualizarFilas()
 
-		menu()
+		go menu()
 	}
 
 }
 
-func menu(){
-		fmt.Printf("Digite 0 para cadastrar um posto\n")
-		fmt.Printf("Digite 1 para listar os postos\n")
-		fmt.Printf("Digite 2 para selecionar um posto e exibir a fila de veiculos\n")
-		fmt.Printf("Digite 3 para listar os veiculos\n")		
-		fmt.Scanln(&opcao)
-		switch {
-		case opcao == 0:
-			fmt.Println("Cadastrar posto")
-			cadastrarPosto()
-		case opcao == 1:
-			fmt.Println("Listar postos")
-			listarPostosServidor()
+func menu() {
+	fmt.Printf("Digite 0 para cadastrar um posto\n")
+	fmt.Printf("Digite 1 para listar os postos\n")
+	fmt.Printf("Digite 2 para selecionar um posto e exibir a fila de veiculos\n")
+	fmt.Printf("Digite 3 para listar os veiculos\n")
+	fmt.Scanln(&opcao)
+	switch {
+	case opcao == 0:
+		fmt.Println("Cadastrar posto")
+		cadastrarPosto()
+	case opcao == 1:
+		fmt.Println("Listar postos")
+		listarPostosServidor()
 
-		case opcao == 2:
-			fmt.Println("Digite o id do posto que deseja selecionar:")
-			fmt.Scanln(&id)
-			for i := range postos {
-				if postos[i].ID == id {
-					selecionado = postos[i]
-					exibirFilaPosto(selecionado)
-					break
-				}
-			}		
-
-		case opcao == 3:
-			fmt.Println("listar veiculos")
-			listarVeiculosServidor()		
-
-		default:
-			fmt.Println("Opção inválida")
+	case opcao == 2:
+		fmt.Println("Digite o id do posto que deseja selecionar:")
+		fmt.Scanln(&id)
+		for i := range postos {
+			if postos[i].ID == id {
+				selecionado = postos[i]
+				exibirFilaPosto(selecionado)
+				break
+			}
 		}
+
+	case opcao == 3:
+		fmt.Println("listar veiculos")
+		listarVeiculosServidor()
+
+	default:
+		fmt.Println("Opção inválida")
+	}
 }
 
-func cadastrarPosto(){
+func cadastrarPosto() {
 	fmt.Println("Cadastrar posto")
 	fmt.Println("Digite o ID do posto:")
 	fmt.Scanln(&id)
@@ -150,7 +164,7 @@ func cadastrarPosto(){
 	fmt.Println("Posto cadastrado com sucesso!")
 }
 
-func listarPostosServidor(){
+func listarPostosServidor() {
 	for i := range postos {
 		posto := postos[i]
 		fmt.Printf("ID: %s\n", posto.ID)
@@ -162,7 +176,7 @@ func listarPostosServidor(){
 	}
 }
 
-func listarVeiculosServidor(){
+func listarVeiculosServidor() {
 	for i := range veiculos {
 		veiculo := veiculos[i]
 		fmt.Printf("ID: %s\n", veiculo.ID)
@@ -186,10 +200,10 @@ func exibirFilaPosto(posto *modelo.Posto) {
 	}
 }
 
-func AtualizarFilas(){
+func AtualizarFilas() {
 	for i := range postos {
 		p := postos[i]
-		go modelo.ArrumarPosicaoFila(p)	
+		go modelo.ArrumarPosicaoFila(p)
 	}
 }
 
@@ -235,6 +249,8 @@ func cliente(conexao net.Conn) {
 		case "reservar-vaga":
 			reservarVagaPosto(conexao, req)
 
+		case "atualizar-posicao-veiculo":
+			atualizarPosicaoVeiculoNaFila(conexao, req)
 		}
 	}
 }
@@ -496,6 +512,67 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 	}
 	respostaRequisicao := Requisicao{
 		Comando: "reservar-vaga",
+		Dados:   respostaJSON,
+	}
+	enviarResposta(conexao, respostaRequisicao)
+}
+
+func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
+	// decodifica o JSON do body da req
+	var attPosicaoVeiculoJson modelo.AtualizarPosicaoNaFila
+	err := json.Unmarshal(requisicao.Dados, &attPosicaoVeiculoJson)
+	if err != nil {
+		fmt.Println("Erro ao decodificar JSON")
+		return
+	}
+
+	var veiculo *modelo.Veiculo
+	for i := range veiculos {
+		if veiculos[i].ID == attPosicaoVeiculoJson.Veiculo.ID {
+			veiculo = &attPosicaoVeiculoJson.Veiculo
+			break
+		}
+	}
+
+	// procura o posto pelo ID
+	var posto *modelo.Posto
+	for i := range postos {
+		if postos[i].ID == attPosicaoVeiculoJson.ID_posto {
+			posto = postos[i]
+			break
+		}
+	}
+
+	if posto == nil {
+		fmt.Println("Posto não encontrado para atualização da posição do veículo")
+		return
+	}
+
+	if veiculo == nil {
+		fmt.Println("Veiculo não encontrado para atualização da posição do veículo")
+		return
+	}
+
+	reservado := modelo.ReservarVaga(posto, veiculo)
+	if reservado {
+		fmt.Printf("(DESLOCANDO AO POSTO) Posição do veículo %s atualizado para a latitude e longitude: %v, %v\n", veiculo.ID, veiculo.Latitude, veiculo.Longitude)
+	} else {
+		fmt.Printf("ALGUM PROBLEMA DEU")
+	}
+	resposta := modelo.RecomendadoResponse{
+		ID_posto:        posto.ID,
+		Latitude:        posto.Latitude,
+		Longitude:       posto.Longitude,
+		Posicao_na_fila: modelo.GetPosFila(*veiculo, posto),
+	}
+
+	respostaJSON, err := json.Marshal(resposta)
+	if err != nil {
+		fmt.Println("Erro ao codificar resposta")
+		return
+	}
+	respostaRequisicao := Requisicao{
+		Comando: "atualizar-posicao-veiculo",
 		Dados:   respostaJSON,
 	}
 	enviarResposta(conexao, respostaRequisicao)
