@@ -104,12 +104,14 @@ func main() {
 		fmt.Println("Cliente conectado à porta:", conexao.RemoteAddr())
 		fmt.Println("Total de clientes conectados:", getQtdClientes())
 
-		tipo := TipoDeCliente(conexao)
-		if tipo == "veiculo" {
-			go cliente(conexao)
-		} else if tipo == "posto"{
-			
-		}
+		tipo := TipoDeCliente(conexao)		
+		if tipo == "posto"{
+			conexoes_postos = append(conexoes_postos, &conexao)
+			fmt.Println("Cliente conectado à porta:", conexoes_postos)
+		}  
+		go cliente(conexao)
+		
+		
 		//go cliente(conexao)
 		go AtualizarFilas()
 
@@ -218,6 +220,13 @@ func AtualizarFilas() {
 func cliente(conexao net.Conn) {
 	defer func() {
 		decrementar()
+		for i := range conexoes_postos{
+			p := conexoes_postos[i]
+			if conexao == *p {
+				conexoes_postos = append(conexoes_postos[:i], conexoes_postos[i+1:]...)
+				fmt.Println("posto desconectado, conexoes de postos restantes: ",conexoes_postos)
+			}
+		}
 		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
 		conexao.Close()
 	}() // decrementa após a conexão ser encerrada
@@ -648,7 +657,8 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 
 func TipoDeCliente(conexao net.Conn)string{
 	pergunta := Requisicao{
-		Comando: "tipo-de-cliente",
+		Comando: "tipo-cliente",
+		Dados:  json.RawMessage(`"tipo-cliente"`),
 	}
 	err := enviarRequisicao(conexao,pergunta)
 	if err != nil {
@@ -743,6 +753,8 @@ func receberResposta(conexao net.Conn) json.RawMessage {
 	case "listar-veiculos":
 		return response.Dados
 	case "tipo-de-cliente":
+		return response.Dados
+	case "adicionar-conexao":
 		return response.Dados
 	
 	}
