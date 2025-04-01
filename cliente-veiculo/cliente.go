@@ -34,6 +34,7 @@ var (
 	longitude float64 //bateria   float64
 )
 var veiculo modelo.Veiculo
+var posto_selecionado *modelo.Posto
 var ticker *time.Ticker
 var goroutineCriada bool
 var conexao net.Conn
@@ -92,6 +93,10 @@ func receberResposta() json.RawMessage {
 		return response.Dados
 	case "listar-veiculos":
 		return response.Dados
+	case "reservar-vaga":
+		return response.Dados
+	case "atualizar-posicao-veiculo":
+		return response.Dados
 	}
 
 	return nil
@@ -101,10 +106,16 @@ func selecionarObjetivo() {
 	for {
 		if veiculo.ID != "" {
 			if !goroutineCriada {
-				ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada dois segundos
+				ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada 5 segundos
 				go func() {
 					for range ticker.C {
-						modelo.AtualizarLocalizacao(&veiculo)
+						if veiculo.IsDeslocandoAoPosto {
+							modelo.DeslocarParaPosto(&veiculo, posto_selecionado)
+							atualizarPosicaoVeiculoNaFila()
+							modelo.ArrumarPosicaoFila(posto_selecionado)
+						} else {
+							modelo.AtualizarLocalizacao(&veiculo)
+						}
 					}
 				}()
 				goroutineCriada = true
@@ -325,8 +336,6 @@ func reservarVaga() {
 	var postoEncontrado bool = false
 	//var pagamentoRealizado bool = false
 
-	var posto_selecionado *modelo.Posto
-
 	for i := range listaDosPosto {
 		posto := &listaDosPosto[i]
 		if posto.ID == idPosto {
@@ -394,9 +403,41 @@ func reservarVaga() {
 		return
 	}
 
+	//adiciona o veículo à fila do posto, para simular como o do servidor
+	posto_selecionado.Fila = append(posto_selecionado.Fila, &veiculo)
+	veiculo.IsDeslocandoAoPosto = true //ao reservar, automaticamente o veículo começa se deslocar para o posto
+
 	fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
 	fmt.Println("latitude: ", vagaFeita.Latitude)
 	fmt.Println("longitude: ", vagaFeita.Longitude)
 	fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
+}
 
+func atualizarPosicaoVeiculoNaFila() {
+	attPosicao := modelo.AtualizarPosicaoNaFila{
+		Veiculo:  veiculo,
+		ID_posto: posto_selecionado.ID,
+	}
+	req, err := json.Marshal(attPosicao)
+	if err != nil {
+		fmt.Printf("Erro ao converter atualização de localização para JSON: %v\n", err)
+		return
+	}
+
+	requisicao := Requisicao{
+		Comando: "atualizar-posicao-veiculo",
+		Dados:   req,
+	}
+
+	erro := enviarRequisicao(requisicao)
+
+	if erro != nil {
+		fmt.Println("erro ao enviar requisiçao")
+	}
+
+	resp := receberResposta()
+	if resp == nil {
+		fmt.Println("Erro ao receber resposta da atualização da localização do veículo")
+		return
+	}
 }
