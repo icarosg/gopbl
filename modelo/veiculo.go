@@ -59,41 +59,39 @@ func DiminuirNivelBateria(v *Veiculo) {
 }
 
 func DeslocarParaPosto(v *Veiculo, p *Posto) {
-	for v.Latitude != p.Latitude || v.Longitude != p.Longitude {
-		if v.Latitude < p.Latitude {
-			if p.Latitude-v.Latitude <= 5 {
-				v.Latitude = p.Latitude
-			} else {
-				v.Latitude += 5
-			}
-		} else if v.Latitude > p.Latitude {
-			if v.Latitude-p.Latitude <= 5 {
-				v.Latitude = p.Latitude
-			} else {
-				v.Latitude -= 5
-			}
+	if v.Latitude < p.Latitude {
+		if p.Latitude-v.Latitude <= 5 {
+			v.Latitude = p.Latitude
+		} else {
+			v.Latitude += 5
 		}
-
-		if v.Longitude < p.Longitude {
-			if p.Longitude-v.Longitude <= 5 {
-				v.Longitude = p.Longitude
-			} else {
-				v.Longitude += 5
-			}
-		} else if v.Longitude > p.Longitude {
-			if v.Longitude-p.Longitude <= 5 {
-				v.Longitude = p.Longitude
-			} else {
-				v.Longitude -= 5
-			}
+	} else if v.Latitude > p.Latitude {
+		if v.Latitude-p.Latitude <= 5 {
+			v.Latitude = p.Latitude
+		} else {
+			v.Latitude -= 5
 		}
+	}
 
-		if !v.IsCarregando {
-			// diminui a bateria entre 3.0 e 1.0 por atualização
-			v.Bateria -= rand.Float64()*3.0 + 1.0
-			if v.Bateria < 10 {
-				v.Bateria = 10
-			}
+	if v.Longitude < p.Longitude {
+		if p.Longitude-v.Longitude <= 5 {
+			v.Longitude = p.Longitude
+		} else {
+			v.Longitude += 5
+		}
+	} else if v.Longitude > p.Longitude {
+		if v.Longitude-p.Longitude <= 5 {
+			v.Longitude = p.Longitude
+		} else {
+			v.Longitude -= 5
+		}
+	}
+
+	if !v.IsCarregando {
+		// diminui a bateria entre 3.0 e 1.0 por atualização
+		v.Bateria -= rand.Float64()*3.0 + 1.0
+		if v.Bateria < 10 {
+			v.Bateria = 10
 		}
 	}
 }

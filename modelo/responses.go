@@ -10,5 +10,10 @@ type RecomendadoResponse struct {
 type PagamentoJson struct {
 	ID_veiculo string  `json:"id_veiculo"`
 	Valor      float64 `json:"valor"`
-	ID_posto      string  `json:"id_posto"`	
+	ID_posto   string  `json:"id_posto"`
+}
+
+type AtualizarPosicaoNaFila struct {
+	Veiculo Veiculo  `json:"veiculo"`
+	ID_posto   string  `json:"id_posto"`
 }
