@@ -680,9 +680,30 @@ func TipoDeCliente(conexao net.Conn)string{
 }
 
 func listarPostos(conexao net.Conn) {
-	postosMutex.Lock()
-	defer postosMutex.Unlock()
+	// postosMutex.Lock()
+	// defer postosMutex.Unlock()
 
+	//percorre a lista das conexoes que sao postos
+	for i := range conexoes_postos{
+		conexaoPosto := conexoes_postos[i]
+		req := Requisicao{
+			Comando: "get-posto",			
+		}
+		//envia a requisiçao pra conexao de um posto para ele responder com o posto cadastrado ou importado
+		err := enviarRequisicao(*conexaoPosto, req)
+		if err != nil{
+			fmt.Println("erro ao enviar requisição pra esse posto")
+			return
+		}
+		//recebe a resposta do posto e o adiciona na lista de postos
+		resposta := receberResposta(*conexaoPosto)
+		var postoRecebido modelo.Posto
+		erro := json.Unmarshal(resposta, &postoRecebido)
+		if erro != nil {
+			fmt.Println("erro ao decodificar resposta")
+		}
+		postos = append(postos, &postoRecebido)
+	}
 	// converte a lista de postos para JSON
 	postosJSON, erro := json.Marshal(postos)
 	if erro != nil {
@@ -694,10 +715,8 @@ func listarPostos(conexao net.Conn) {
 		Comando: "listar-postos",
 		Dados:   postosJSON,
 	}
-
+	//envia a lista de postos para o cliente-veiculo que pediu
 	enviarResposta(conexao, response)
-
-	//fmt.Printf("Postos listados: %s\n", string(postosJSON))
 }
 
 func enviarResposta(conexao net.Conn, resposta Requisicao) {
@@ -756,7 +775,8 @@ func receberResposta(conexao net.Conn) json.RawMessage {
 		return response.Dados
 	case "adicionar-conexao":
 		return response.Dados
-	
+	case "get-posto":
+		return response.Dados	
 	}
 
 	return nil

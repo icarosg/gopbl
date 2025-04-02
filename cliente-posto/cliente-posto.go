@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopbl/modelo"
+	"io"
 	"net"
 	//"time"
 )
@@ -34,7 +35,8 @@ func main() {
 	defer conexao.Close()
 
 	fmt.Println("posto conectado à porta:", conexao.RemoteAddr())
-
+	posto := modelo.NovoPosto("teste", 10, 10)
+	posto_criado = &posto
 	selecionarObjetivo()
 }
 
@@ -74,6 +76,8 @@ func receberResposta() json.RawMessage {
 	switch response.Comando {
 	case "tipo-cliente":
 		return response.Dados
+	case "get-posto":
+		return response.Dados
 	}
 
 	return nil
@@ -99,19 +103,54 @@ func retornarConexaoPosto(){
 				Dados: json.RawMessage(`"posto"`),
 			}
 			enviarRequisicao(req)
+			break
 		}
 	}
 }
 
 func selecionarObjetivo() {
 	retornarConexaoPosto()
+	buffer := make([]byte, 4096)
 	for {		
+		n, erro := conexao.Read(buffer)
+		if erro != nil {
+			if erro == io.EOF {
+				fmt.Printf("O cliente %s fechou a conexão\n", conexao.RemoteAddr())
+			}
+			break
+		}
+		var req Requisicao
+		var resposta Requisicao
+		erro = json.Unmarshal(buffer[:n], &req)
 
+		if erro != nil {
+			fmt.Println("Erro ao decodificar a requisição")
+			continue
+		}
+
+		switch req.Comando {
+		case "get-posto":
+			postoJSON,e := json.Marshal(posto_criado)
+			if e != nil{
+				fmt.Println("erro")
+				return
+			}
+			fmt.Println("teste1")
+			resposta = Requisicao{
+				Comando: "get-posto",
+				Dados: postoJSON,
+			}
+			fmt.Println("teste2")
+			enviarRequisicao(resposta)
+			
+		}
 		if posto_criado.ID != "" {
 			fmt.Printf("O id do posto É: %s. \nLONGITUDE E LATITUDE: %v, %v.\n\n\n", posto_criado.ID, posto_criado.Longitude, posto_criado.Latitude)
 		} else {
 			fmt.Println("Você ainda não possui um posto.")
 		}
+
+
 
 		fmt.Printf("Digite 0 para cadastrar seu posto\n")
 		fmt.Printf("Digite 1 para listar os postos e importar algum\n")
