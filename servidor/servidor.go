@@ -34,10 +34,10 @@ type Requisicao struct {
 }
 
 var (
-	postosMutex sync.Mutex
-	postos      []*modelo.Posto // Slice para armazenar todos os postos
-	veiculos    []*modelo.Veiculo
-	conexoes_postos 	[]*net.Conn
+	postosMutex     sync.Mutex
+	postos          []*modelo.Posto // Slice para armazenar todos os postos
+	veiculos        []*modelo.Veiculo
+	conexoes_postos []net.Conn
 	//pagamentos  []PagamentoJson
 )
 
@@ -59,13 +59,6 @@ var ticker *time.Ticker
 var arquivoPostosCriados bool = false
 
 func main() {
-	// http.HandleFunc("/posto", handler)
-	// http.HandleFunc("/listar", listarPostos)
-	// http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
-	// http.HandleFunc("/posto-recomendado", postoRecomendado)
-	// http.HandleFunc("/reservar-vaga", reservarVagaPosto)
-	// http.HandleFunc("/pagamento", reservarVagaPosto)
-
 	// cria um listener TCP na porta 8080
 	listener, erro := net.Listen("tcp", "localhost:8080")
 	if erro != nil {
@@ -98,23 +91,20 @@ func main() {
 			continue // continua aguardando outras conexões
 		}
 
-
 		incrementar()
 
 		fmt.Println("Cliente conectado à porta:", conexao.RemoteAddr())
 		fmt.Println("Total de clientes conectados:", getQtdClientes())
 
-		tipo := TipoDeCliente(conexao)		
-		if tipo == "posto"{
-			conexoes_postos = append(conexoes_postos, &conexao)
+		tipo := TipoDeCliente(conexao)
+		if tipo == "posto" {
+			conexoes_postos = append(conexoes_postos, conexao)
 			fmt.Println("Cliente conectado à porta:", conexoes_postos)
-		}  
-		go cliente(conexao)
-		
-		
-		//go cliente(conexao)
-		go AtualizarFilas()
+		} else {
+			go cliente(conexao)
+		}
 
+		go AtualizarFilas()
 		go menu()
 	}
 
@@ -220,11 +210,11 @@ func AtualizarFilas() {
 func cliente(conexao net.Conn) {
 	defer func() {
 		decrementar()
-		for i := range conexoes_postos{
+		for i := range conexoes_postos {
 			p := conexoes_postos[i]
-			if conexao == *p {
+			if conexao == p {
 				conexoes_postos = append(conexoes_postos[:i], conexoes_postos[i+1:]...)
-				fmt.Println("posto desconectado, conexoes de postos restantes: ",conexoes_postos)
+				fmt.Println("posto desconectado, conexoes de postos restantes: ", conexoes_postos)
 			}
 		}
 		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
@@ -291,24 +281,6 @@ func getQtdClientes() int {
 }
 
 func inicializar() {
-	posto1 := modelo.NovoPosto("posto1", 10, 15)
-	posto2 := modelo.NovoPosto("posto2", 50, 50)
-
-	// Adiciona um veículo à fila do posto2 com coordenadas mais realistas
-	veiculo1 := modelo.NovoVeiculo("veiculo1", 30, 30)
-
-	// Adiciona o veículo apenas ao posto2
-	posto2.Fila = append(posto2.Fila, &veiculo1)
-	posto2.QtdFila = 1
-
-	// posto1.Fila = append(posto1.Fila, veiculo1)
-	// posto1.QtdFila = 1
-
-	// adiciona os postos ao slice
-	postosMutex.Lock()
-	postos = append(postos, &posto1, &posto2)
-	postosMutex.Unlock()
-
 	if !arquivoPostosCriados {
 		salvarPostosNoArquivo()
 		arquivoPostosCriados = true
@@ -655,12 +627,12 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 	enviarResposta(conexao, response)
 }
 
-func TipoDeCliente(conexao net.Conn)string{
+func TipoDeCliente(conexao net.Conn) string {
 	pergunta := Requisicao{
 		Comando: "tipo-cliente",
-		Dados:  json.RawMessage(`"tipo-cliente"`),
+		Dados:   json.RawMessage(`"tipo-cliente"`),
 	}
-	err := enviarRequisicao(conexao,pergunta)
+	err := enviarResposta(conexao, pergunta)
 	if err != nil {
 		fmt.Println("erro ao enviar a requisicao para essa conexao")
 		return "erro"
@@ -684,24 +656,28 @@ func listarPostos(conexao net.Conn) {
 	// defer postosMutex.Unlock()
 
 	//percorre a lista das conexoes que sao postos
-	for i := range conexoes_postos{
+	for i := range conexoes_postos {
 		conexaoPosto := conexoes_postos[i]
 		req := Requisicao{
-			Comando: "get-posto",			
+			Comando: "get-posto",
 		}
 		//envia a requisiçao pra conexao de um posto para ele responder com o posto cadastrado ou importado
-		err := enviarRequisicao(*conexaoPosto, req)
-		if err != nil{
+		err := enviarResposta(conexaoPosto, req)
+		if err != nil {
 			fmt.Println("erro ao enviar requisição pra esse posto")
 			return
 		}
+		fmt.Println("teste1")
 		//recebe a resposta do posto e o adiciona na lista de postos
-		resposta := receberResposta(*conexaoPosto)
+		resposta := receberResposta(conexaoPosto)
+		fmt.Println("teste2")
 		var postoRecebido modelo.Posto
 		erro := json.Unmarshal(resposta, &postoRecebido)
 		if erro != nil {
 			fmt.Println("erro ao decodificar resposta")
 		}
+
+		fmt.Println("posto recebido", &postoRecebido)
 		postos = append(postos, &postoRecebido)
 	}
 	// converte a lista de postos para JSON
@@ -715,34 +691,21 @@ func listarPostos(conexao net.Conn) {
 		Comando: "listar-postos",
 		Dados:   postosJSON,
 	}
+
 	//envia a lista de postos para o cliente-veiculo que pediu
 	enviarResposta(conexao, response)
 }
 
-func enviarResposta(conexao net.Conn, resposta Requisicao) {
+func enviarResposta(conexao net.Conn, resposta Requisicao) error {
 	dados, erro := json.Marshal(resposta)
 	if erro != nil {
 		fmt.Printf("Erro ao codificar resposta: %v", erro)
-		return
+		return erro
 	}
 
 	_, erro = conexao.Write(dados)
 	if erro != nil {
 		log.Printf("Erro ao enviar resposta: %v", erro)
-	}
-}
-
-func enviarRequisicao(conexao net.Conn, req Requisicao) error {
-	dados, erro := json.Marshal(req)
-	if erro != nil {
-		fmt.Println("Erro ao codificar a requisição")
-		return erro
-	}
-
-	_, erro = conexao.Write(dados)
-
-	if erro != nil {
-		fmt.Println("Erro ao enviar a requisição")
 		return erro
 	}
 
@@ -752,11 +715,15 @@ func enviarRequisicao(conexao net.Conn, req Requisicao) error {
 func receberResposta(conexao net.Conn) json.RawMessage {
 	buffer := make([]byte, 4096)
 
+	fmt.Println("new")
+	mutex.Lock()
 	n, erro := conexao.Read(buffer)
+	mutex.Unlock()
 	if erro != nil {
 		fmt.Println("Erro ao receber a resposta")
 		return nil
 	}
+	fmt.Println("teste123")
 
 	var response Requisicao
 	erro = json.Unmarshal(buffer[:n], &response)
@@ -776,7 +743,7 @@ func receberResposta(conexao net.Conn) json.RawMessage {
 	case "adicionar-conexao":
 		return response.Dados
 	case "get-posto":
-		return response.Dados	
+		return response.Dados
 	}
 
 	return nil
