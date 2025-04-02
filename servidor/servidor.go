@@ -37,6 +37,7 @@ var (
 	postosMutex sync.Mutex
 	postos      []*modelo.Posto // Slice para armazenar todos os postos
 	veiculos    []*modelo.Veiculo
+	conexoes_postos 	[]*net.Conn
 	//pagamentos  []PagamentoJson
 )
 
@@ -97,12 +98,21 @@ func main() {
 			continue // continua aguardando outras conexões
 		}
 
+
 		incrementar()
 
 		fmt.Println("Cliente conectado à porta:", conexao.RemoteAddr())
 		fmt.Println("Total de clientes conectados:", getQtdClientes())
 
+		tipo := TipoDeCliente(conexao)		
+		if tipo == "posto"{
+			conexoes_postos = append(conexoes_postos, &conexao)
+			fmt.Println("Cliente conectado à porta:", conexoes_postos)
+		}  
 		go cliente(conexao)
+		
+		
+		//go cliente(conexao)
 		go AtualizarFilas()
 
 		go menu()
@@ -210,6 +220,13 @@ func AtualizarFilas() {
 func cliente(conexao net.Conn) {
 	defer func() {
 		decrementar()
+		for i := range conexoes_postos{
+			p := conexoes_postos[i]
+			if conexao == *p {
+				conexoes_postos = append(conexoes_postos[:i], conexoes_postos[i+1:]...)
+				fmt.Println("posto desconectado, conexoes de postos restantes: ",conexoes_postos)
+			}
+		}
 		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
 		conexao.Close()
 	}() // decrementa após a conexão ser encerrada
@@ -638,10 +655,55 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 	enviarResposta(conexao, response)
 }
 
-func listarPostos(conexao net.Conn) {
-	postosMutex.Lock()
-	defer postosMutex.Unlock()
+func TipoDeCliente(conexao net.Conn)string{
+	pergunta := Requisicao{
+		Comando: "tipo-cliente",
+		Dados:  json.RawMessage(`"tipo-cliente"`),
+	}
+	err := enviarRequisicao(conexao,pergunta)
+	if err != nil {
+		fmt.Println("erro ao enviar a requisicao para essa conexao")
+		return "erro"
+	}
+	resposta := receberResposta(conexao)
+	if resposta == nil {
+		fmt.Println("erro ao receber a resposta dessa conexao")
+		return "erro"
+	}
+	var tipo_de_cliente string
+	fail := json.Unmarshal(resposta, &tipo_de_cliente)
+	if fail != nil {
+		fmt.Println("erro ao descodificar a resposta")
+		return "erro"
+	}
+	return tipo_de_cliente
+}
 
+func listarPostos(conexao net.Conn) {
+	// postosMutex.Lock()
+	// defer postosMutex.Unlock()
+
+	//percorre a lista das conexoes que sao postos
+	for i := range conexoes_postos{
+		conexaoPosto := conexoes_postos[i]
+		req := Requisicao{
+			Comando: "get-posto",			
+		}
+		//envia a requisiçao pra conexao de um posto para ele responder com o posto cadastrado ou importado
+		err := enviarRequisicao(*conexaoPosto, req)
+		if err != nil{
+			fmt.Println("erro ao enviar requisição pra esse posto")
+			return
+		}
+		//recebe a resposta do posto e o adiciona na lista de postos
+		resposta := receberResposta(*conexaoPosto)
+		var postoRecebido modelo.Posto
+		erro := json.Unmarshal(resposta, &postoRecebido)
+		if erro != nil {
+			fmt.Println("erro ao decodificar resposta")
+		}
+		postos = append(postos, &postoRecebido)
+	}
 	// converte a lista de postos para JSON
 	postosJSON, erro := json.Marshal(postos)
 	if erro != nil {
@@ -653,10 +715,8 @@ func listarPostos(conexao net.Conn) {
 		Comando: "listar-postos",
 		Dados:   postosJSON,
 	}
-
+	//envia a lista de postos para o cliente-veiculo que pediu
 	enviarResposta(conexao, response)
-
-	//fmt.Printf("Postos listados: %s\n", string(postosJSON))
 }
 
 func enviarResposta(conexao net.Conn, resposta Requisicao) {
@@ -670,4 +730,54 @@ func enviarResposta(conexao net.Conn, resposta Requisicao) {
 	if erro != nil {
 		log.Printf("Erro ao enviar resposta: %v", erro)
 	}
+}
+
+func enviarRequisicao(conexao net.Conn, req Requisicao) error {
+	dados, erro := json.Marshal(req)
+	if erro != nil {
+		fmt.Println("Erro ao codificar a requisição")
+		return erro
+	}
+
+	_, erro = conexao.Write(dados)
+
+	if erro != nil {
+		fmt.Println("Erro ao enviar a requisição")
+		return erro
+	}
+
+	return nil
+}
+
+func receberResposta(conexao net.Conn) json.RawMessage {
+	buffer := make([]byte, 4096)
+
+	n, erro := conexao.Read(buffer)
+	if erro != nil {
+		fmt.Println("Erro ao receber a resposta")
+		return nil
+	}
+
+	var response Requisicao
+	erro = json.Unmarshal(buffer[:n], &response)
+	if erro != nil {
+		fmt.Println("Erro ao decodificar a resposta")
+	}
+
+	switch response.Comando {
+	case "listar-postos":
+		return response.Dados
+	case "encontrar-posto-recomendado":
+		return response.Dados
+	case "listar-veiculos":
+		return response.Dados
+	case "tipo-de-cliente":
+		return response.Dados
+	case "adicionar-conexao":
+		return response.Dados
+	case "get-posto":
+		return response.Dados	
+	}
+
+	return nil
 }

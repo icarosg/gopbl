@@ -136,7 +136,7 @@ func ArrumarPosicaoFila(p *Posto) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	fmt.Println("POSTO", p.Fila)
+	//fmt.Println("POSTO", p.Fila)
 
 	for i := range p.Fila {
 		veiculo := p.Fila[i]
