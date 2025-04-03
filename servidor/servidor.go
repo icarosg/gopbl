@@ -108,8 +108,10 @@ func main() {
 		if tipo == "posto"{
 			conexoes_postos = append(conexoes_postos, &conexao)
 			fmt.Println("Cliente conectado à porta:", conexoes_postos)
-		}  
-		go cliente(conexao)
+		}  else {
+			go cliente(conexao)
+		}
+		
 		
 		
 		//go cliente(conexao)
