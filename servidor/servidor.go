@@ -34,10 +34,11 @@ type Requisicao struct {
 }
 
 var (
-	postosMutex     sync.Mutex
-	postos          []*modelo.Posto // Slice para armazenar todos os postos
-	veiculos        []*modelo.Veiculo
-	conexoes_postos []net.Conn
+	postosMutex       sync.Mutex
+	postos            []*modelo.Posto // Slice para armazenar todos os postos
+	veiculos          []*modelo.Veiculo
+	conexoes_postos   []net.Conn
+	conexoes_clientes []net.Conn
 	//pagamentos  []PagamentoJson
 )
 
@@ -99,8 +100,9 @@ func main() {
 		tipo := TipoDeCliente(conexao)
 		if tipo == "posto" {
 			conexoes_postos = append(conexoes_postos, conexao)
-			fmt.Println("Cliente conectado à porta:", conexoes_postos)
+			go posto(conexao)
 		} else {
+			conexoes_clientes = append(conexoes_postos, conexao)
 			go cliente(conexao)
 		}
 
@@ -144,77 +146,14 @@ func menu() {
 	}
 }
 
-func cadastrarPosto() {
-	fmt.Println("Cadastrar posto")
-	fmt.Println("Digite o ID do posto:")
-	fmt.Scanln(&id)
-	fmt.Println("Digite a latitude do posto:")
-	fmt.Scanln(&latitude)
-	fmt.Println("Digite a longitude do posto:")
-	fmt.Scanln(&longitude)
-
-	novoPosto := modelo.NovoPosto(id, latitude, longitude)
-
-	postosMutex.Lock()
-	postos = append(postos, &novoPosto)
-	postosMutex.Unlock()
-
-	salvarPostosNoArquivo()
-
-	fmt.Println("Posto cadastrado com sucesso!")
-}
-
-func listarPostosServidor() {
-	for i := range postos {
-		posto := postos[i]
-		fmt.Printf("ID: %s\n", posto.ID)
-		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
-		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
-		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
-		fmt.Println("----------------------------------------")
-	}
-}
-
-func listarVeiculosServidor() {
-	for i := range veiculos {
-		veiculo := veiculos[i]
-		fmt.Printf("ID: %s\n", veiculo.ID)
-		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-		fmt.Println("----------------------------------------")
-	}
-}
-
-func exibirFilaPosto(posto *modelo.Posto) {
-	fmt.Printf("Fila do posto %s:\n", posto.ID)
-	for i := range posto.Fila {
-		veiculo := posto.Fila[i]
-		fmt.Printf("ID: %s\n", veiculo.ID)
-		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
-		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
-		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
-		fmt.Println("----------------------------------------")
-	}
-}
-
-func AtualizarFilas() {
-	for i := range postos {
-		p := postos[i]
-		go modelo.ArrumarPosicaoFila(p)
-	}
-}
-
 func cliente(conexao net.Conn) {
 	defer func() {
 		decrementar()
-		for i := range conexoes_postos {
-			p := conexoes_postos[i]
-			if conexao == p {
-				conexoes_postos = append(conexoes_postos[:i], conexoes_postos[i+1:]...)
-				fmt.Println("posto desconectado, conexoes de postos restantes: ", conexoes_postos)
+		for i := range conexoes_clientes {
+			c := conexoes_clientes[i]
+			if conexao == c {
+				conexoes_clientes = append(conexoes_clientes[:i], conexoes_clientes[i+1:]...)
+				fmt.Println("cliente desconectado, conexoes de postos restantes: ", conexoes_clientes)
 			}
 		}
 		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
@@ -258,6 +197,51 @@ func cliente(conexao net.Conn) {
 
 		case "atualizar-posicao-veiculo":
 			atualizarPosicaoVeiculoNaFila(conexao, req)
+		}
+	}
+}
+
+func posto(conexao net.Conn) {
+	defer func() {
+		decrementar()
+		for i := range conexoes_postos {
+			p := conexoes_postos[i]
+			if conexao == p {
+				conexoes_postos = append(conexoes_postos[:i], conexoes_postos[i+1:]...)
+				fmt.Println("posto desconectado, conexoes de postos restantes: ", conexoes_postos)
+			}
+		}
+		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
+		conexao.Close()
+	}() // decrementa após a conexão ser encerrada
+
+	buffer := make([]byte, 4096)
+	for {
+		n, erro := conexao.Read(buffer)
+		if erro != nil {
+			if erro == io.EOF {
+				fmt.Printf("O posto %s fechou a conexão\n", conexao.RemoteAddr())
+			}
+			break
+		}
+
+		var req Requisicao
+
+		erro = json.Unmarshal(buffer[:n], &req)
+
+		if erro != nil {
+			fmt.Println("Erro ao decodificar a requisição")
+			continue
+		}
+
+		switch req.Comando {
+		case "listar-postos":
+			var postoRecebido *modelo.Posto
+			erro := json.Unmarshal(req.Dados, &postoRecebido)
+			if erro != nil {
+				fmt.Println("erro ao decodificar resposta")
+			}
+			postos = append(postos, postoRecebido)
 		}
 	}
 }
@@ -373,6 +357,69 @@ func salvarNoArquivo(nome string) {
 // func handler(w http.ResponseWriter, r *http.Request) {
 // 	http.ServeFile(w, r, "postos.json")
 // }
+
+func cadastrarPosto() {
+	fmt.Println("Cadastrar posto")
+	fmt.Println("Digite o ID do posto:")
+	fmt.Scanln(&id)
+	fmt.Println("Digite a latitude do posto:")
+	fmt.Scanln(&latitude)
+	fmt.Println("Digite a longitude do posto:")
+	fmt.Scanln(&longitude)
+
+	novoPosto := modelo.NovoPosto(id, latitude, longitude)
+
+	postosMutex.Lock()
+	postos = append(postos, &novoPosto)
+	postosMutex.Unlock()
+
+	salvarPostosNoArquivo()
+
+	fmt.Println("Posto cadastrado com sucesso!")
+}
+
+func listarPostosServidor() {
+	for i := range postos {
+		posto := postos[i]
+		fmt.Printf("ID: %s\n", posto.ID)
+		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
+		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
+		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
+		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
+		fmt.Println("----------------------------------------")
+	}
+}
+
+func listarVeiculosServidor() {
+	for i := range veiculos {
+		veiculo := veiculos[i]
+		fmt.Printf("ID: %s\n", veiculo.ID)
+		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+		fmt.Println("----------------------------------------")
+	}
+}
+
+func exibirFilaPosto(posto *modelo.Posto) {
+	fmt.Printf("Fila do posto %s:\n", posto.ID)
+	for i := range posto.Fila {
+		veiculo := posto.Fila[i]
+		fmt.Printf("ID: %s\n", veiculo.ID)
+		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
+		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
+		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
+		fmt.Println("----------------------------------------")
+	}
+}
+
+func AtualizarFilas() {
+	for i := range postos {
+		p := postos[i]
+		go modelo.ArrumarPosicaoFila(p)
+	}
+}
 
 func cadastrarVeiculo(req Requisicao) {
 	//aki tava travando o sistema
@@ -654,6 +701,7 @@ func TipoDeCliente(conexao net.Conn) string {
 func listarPostos(conexao net.Conn) {
 	// postosMutex.Lock()
 	// defer postosMutex.Unlock()
+	postos = nil //limpa os postos
 
 	//percorre a lista das conexoes que sao postos
 	for i := range conexoes_postos {
@@ -667,19 +715,20 @@ func listarPostos(conexao net.Conn) {
 			fmt.Println("erro ao enviar requisição pra esse posto")
 			return
 		}
-		fmt.Println("teste1")
 		//recebe a resposta do posto e o adiciona na lista de postos
-		resposta := receberResposta(conexaoPosto)
-		fmt.Println("teste2")
-		var postoRecebido modelo.Posto
-		erro := json.Unmarshal(resposta, &postoRecebido)
-		if erro != nil {
-			fmt.Println("erro ao decodificar resposta")
-		}
+		// resposta := receberResposta(conexaoPosto)
+		// var postoRecebido modelo.Posto
+		// erro := json.Unmarshal(resposta, &postoRecebido)
+		// if erro != nil {
+		// 	fmt.Println("erro ao decodificar resposta")
+		// }
 
-		fmt.Println("posto recebido", &postoRecebido)
-		postos = append(postos, &postoRecebido)
+		// fmt.Println("posto recebido", &postoRecebido)
+		// postos = append(postos, &postoRecebido)
 	}
+
+	time.Sleep(1 * time.Second) // aguarda por 1 segundo
+
 	// converte a lista de postos para JSON
 	postosJSON, erro := json.Marshal(postos)
 	if erro != nil {
@@ -715,7 +764,6 @@ func enviarResposta(conexao net.Conn, resposta Requisicao) error {
 func receberResposta(conexao net.Conn) json.RawMessage {
 	buffer := make([]byte, 4096)
 
-	fmt.Println("new")
 	mutex.Lock()
 	n, erro := conexao.Read(buffer)
 	mutex.Unlock()
@@ -723,7 +771,6 @@ func receberResposta(conexao net.Conn) json.RawMessage {
 		fmt.Println("Erro ao receber a resposta")
 		return nil
 	}
-	fmt.Println("teste123")
 
 	var response Requisicao
 	erro = json.Unmarshal(buffer[:n], &response)

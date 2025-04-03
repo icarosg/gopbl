@@ -132,7 +132,7 @@ func verificarAlgoNoBuffer() {
 						continue
 					}
 					req = Requisicao{
-						Comando: "get-posto",
+						Comando: "listar-postos",
 						Dados:   postoJSON,
 					}
 					enviarRequisicao(req)

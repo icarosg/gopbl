@@ -97,12 +97,41 @@ func receberResposta() json.RawMessage {
 		return response.Dados
 	case "atualizar-posicao-veiculo":
 		return response.Dados
+	case "tipo-cliente":
+		return response.Dados
 	}
 
 	return nil
 }
 
+func retornarConexaoCliente() {
+	for {
+		resp := receberResposta()
+		if resp == nil {
+			fmt.Println("Erro ao retornar conexão do posto")
+			continue
+		}
+
+		var tipo string
+		erro := json.Unmarshal(resp, &tipo)
+		if erro != nil {
+			fmt.Println("Erro ao converter JSON:", erro)
+			continue
+		}
+		if tipo == "tipo-cliente" {
+			req := Requisicao{
+				Comando: "adicionar-conexao",
+				Dados:   json.RawMessage(`"cliente"`),
+			}
+			enviarRequisicao(req)
+			break
+		}
+	}
+}
+
 func selecionarObjetivo() {
+	retornarConexaoCliente()
+
 	for {
 		if veiculo.ID != "" {
 			if !goroutineCriada {
@@ -255,6 +284,8 @@ func listarPostos() []modelo.Posto {
 
 	enviarRequisicao(req)
 
+	time.Sleep(1 * time.Second) // aguarda por 1 segundo
+	time.Sleep(1 * time.Second) // aguarda por 1 segundo
 	resp := receberResposta()
 	if resp == nil {
 		fmt.Println("Erro ao listar postos")
