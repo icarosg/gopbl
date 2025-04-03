@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"sync"
+	//"sync"
 	"time"
 )
 
@@ -12,7 +12,7 @@ type Posto struct {
 	ID           string
 	Latitude     float64
 	Longitude    float64
-	mu           sync.Mutex
+	//mu           sync.Mutex
 	Fila         []*Veiculo
 	QtdFila      int
 	BombaOcupada bool
@@ -34,8 +34,8 @@ func NovoPosto(id string, lat float64, long float64) Posto {
 
 func ReservarVaga(p *Posto, v *Veiculo) bool {
 	// retorna true se caso seja atualização da posição do veículo na fila
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	// p.mu.Lock()
+	// defer p.mu.Unlock()
 
 	// if !p.BombaOcupada && p.Latitude == v.Latitude && p.Longitude == v.Longitude {
 	// 	p.BombaOcupada = true
@@ -62,8 +62,8 @@ func ReservarVaga(p *Posto, v *Veiculo) bool {
 }
 
 func LiberarVaga(p *Posto) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	// p.mu.Lock()
+	// defer p.mu.Unlock()
 
 	p.BombaOcupada = false
 	fmt.Printf("Posto %s com a bomba liberada.\n", p.ID)
@@ -96,15 +96,15 @@ func GetPosFila(v Veiculo, p *Posto) int {
 }
 
 func GetBombaDisponivel(p *Posto) bool {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	// p.mu.Lock()
+	// defer p.mu.Unlock()
 
 	return p.BombaOcupada
 }
 
 func GetLocalizacaoPosto(p *Posto) (float64, float64) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	// p.mu.Lock()
+	// defer p.mu.Unlock()
 
 	return p.Latitude, p.Longitude
 }
@@ -133,8 +133,8 @@ func CarregarBateria(v *Veiculo, p *Posto) {
 }
 
 func ArrumarPosicaoFila(p *Posto) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	// p.mu.Lock()
+	// defer p.mu.Unlock()
 
 	//fmt.Println("POSTO", p.Fila)
 
