@@ -243,8 +243,55 @@ func posto(conexao net.Conn) {
 			}
 			postos = append(postos, postoRecebido)
 		case "cadastrar-posto":
-			testSalvarPosto(req,conexao)			
+			testSalvarPosto(req,conexao)
+		case "postos-salvos":
+			enviarPostosSalvos(conexao)			
 		}
+	}
+}
+
+func enviarPostosSalvos(conexao net.Conn) {
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
+
+	nomeArquivo := "postos.json"
+	//mapPosto := map[string]modelo.Posto{}
+
+	arquivo, err := os.Open(nomeArquivo)
+    if err != nil {
+		fmt.Println("erro ao abrir arquivo pra carregar os postos")
+        return
+    }
+    defer arquivo.Close()
+
+	var postosArquivo []*modelo.Posto
+	var postosExistentesArquivo []*modelo.Posto
+    decoder := json.NewDecoder(arquivo)
+    if err := decoder.Decode(&postosArquivo); err != nil {        
+		fmt.Println("erro ao decodificar JSON do arquivo dos postos")
+		return
+    }
+
+	for i := range postosArquivo {
+		posto := postosArquivo[i]
+		if posto != nil{
+			postosExistentesArquivo = append(postosExistentesArquivo, posto)
+		}
+	}
+	postosJSON, err := json.Marshal(postosExistentesArquivo)
+	if err != nil {
+		fmt.Println("erro ao codificar os postos salvos no arquivo para JSON antes de enviar para o posto")
+		return
+	}
+	req := Requisicao{
+		Comando: "postos-salvos",
+		Dados:   postosJSON,
+	}
+	fmt.Println(postosExistentesArquivo)
+	//time.Sleep(1 * time.Second) // Espera 1 segundo para garantir que a resposta seja recebida
+	teste := enviarResposta(conexao, req)
+	if teste != nil {
+		fmt.Println("deu pau akl oh")
 	}
 }
 
@@ -869,6 +916,8 @@ func receberResposta(conexao net.Conn) json.RawMessage {
 	case "adicionar-conexao":
 		return response.Dados
 	case "get-posto":
+		return response.Dados
+	case "postos-salvos":
 		return response.Dados
 	}
 

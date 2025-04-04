@@ -40,7 +40,7 @@ func main() {
 	fmt.Println("posto conectado à porta:", conexao.RemoteAddr())
 	// posto := modelo.NovoPosto("teste", 10, 10)
 	// posto_criado = &posto
-	//retornarConexaoPosto()	
+	//retornarConexaoPosto()
 	//go verificarAlgoNoBuffer()
 	selecionarObjetivo()
 }
@@ -69,7 +69,7 @@ func enviarRequisicao(req Requisicao) error {
 func receberResposta() *Requisicao {
 	buffer := make([]byte, 4096)
 	// Configura um timeout de 100ms
-    conexao.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+	conexao.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 	mutex.Lock()
 	n, erro := conexao.Read(buffer)
 	mutex.Unlock()
@@ -92,7 +92,11 @@ func receberResposta() *Requisicao {
 		return &response
 	case "cadastrou":
 		return &response
+	case "postos-salvos":
+		fmt.Println("chegou aki")
+		return &response
 	default:
+		fmt.Println("Comando desconhecido:", response.Comando)
 		return nil
 	}
 
@@ -127,14 +131,16 @@ func retornarConexaoPosto() {
 func verificarAlgoNoBuffer() {
 	//fmt.Println("verificando algo no buffer")
 	for {
+		//mutex.Lock()
 		//fmt.Println("to aki oh")
 		resposta := receberResposta()
+
 		//fmt.Println("sexo")
 		if resposta != nil {
 			fmt.Println(resposta.Comando)
 		}
 
-		if resposta != nil{
+		if resposta != nil {
 			if posto_criado.ID != "" {
 				var req Requisicao
 
@@ -150,8 +156,8 @@ func verificarAlgoNoBuffer() {
 						Dados:   postoJSON,
 					}
 					enviarRequisicao(req)
-				// case "cadastrar-posto":
-				// 	cadastrarPosto()
+					// case "cadastrar-posto":
+					// 	cadastrarPosto()
 				}
 
 			} else {
@@ -159,72 +165,119 @@ func verificarAlgoNoBuffer() {
 			}
 			//return
 		}
-		
+		//mutex.Unlock()
+		time.Sleep(1 * time.Second) // Espera 1 segundo antes de verificar novamente
 	}
 }
 
 func selecionarObjetivo() {
 	retornarConexaoPosto()
-	go verificarAlgoNoBuffer()
+	//go verificarAlgoNoBuffer()
 
-	for {
-		//verificarAlgoNoBuffer()
-		fmt.Printf("Digite 0 para cadastrar seu posto\n")
-		fmt.Printf("Digite 1 para listar os postos e importar algum\n")
+	for {		
+			if posto_criado.ID == "" {
+				fmt.Printf("Digite 0 para cadastrar seu posto\n")
+				fmt.Printf("Digite 1 para listar os postos e importar algum\n")
+				fmt.Scanln(&opcao)
 
-		fmt.Scanln(&opcao)
-		switch {
-		case opcao == 0:				
-			cadastrarPosto()
+				switch {
+				case opcao == 0:
+					cadastrarPosto()
 
-		case opcao == 1:
-			fmt.Println("Listar e importar posto")
-			//listarEImportarVeiculo()
+				case opcao == 1:
+					fmt.Println("Listar e importar posto")
+					listarEImportarPosto()
 
-		default:
-			fmt.Println("Opção inválida")
-		}
-		//verificarAlgoNoBuffer()
+				default:
+					fmt.Println("Opção inválida")
+				}
+			} else {
+				go verificarAlgoNoBuffer()
+			}
+			
+		
+
 	}
 }
 
-func cadastrarPosto() {	
-	
-		fmt.Println("Cadastrar posto")
-		fmt.Println("Digite o ID do posto:")
-		fmt.Scanln(&id)
-		fmt.Println("Digite a latitude do posto:")
-		fmt.Scanln(&latitude)
-		fmt.Println("Digite a longitude do posto:")
-		fmt.Scanln(&longitude)	
+func cadastrarPosto() {
 
-		posto := modelo.NovoPosto(id, longitude, latitude)
-		posto_criado = posto
+	fmt.Println("Cadastrar posto")
+	fmt.Println("Digite o ID do posto:")
+	fmt.Scanln(&id)
+	fmt.Println("Digite a latitude do posto:")
+	fmt.Scanln(&latitude)
+	fmt.Println("Digite a longitude do posto:")
+	fmt.Scanln(&longitude)
 
-		postoJSON, erro := json.Marshal(posto_criado)
-		if erro != nil {
-			fmt.Printf("Erro ao converter posto para JSON: %v\n", erro)
-			return
-		}
+	posto := modelo.NovoPosto(id, longitude, latitude)
+	posto_criado = posto
 
-		req := Requisicao{
-			Comando: "cadastrar-posto",
-			Dados:   postoJSON,
-		}
-		
-		erro = enviarRequisicao(req)		
+	postoJSON, erro := json.Marshal(posto_criado)
+	if erro != nil {
+		fmt.Printf("Erro ao converter posto para JSON: %v\n", erro)
+		return
+	}
 
-		if erro != nil {
-			fmt.Println("erro ao cadastrar posto")
-			return
-		}
+	req := Requisicao{
+		Comando: "cadastrar-posto",
+		Dados:   postoJSON,
+	}
 
-		err := receberResposta()
-		if err != nil {
-			fmt.Println("erro ao receber respsta depois de tentar cadastrar posto")
-			return
-		}
+	erro = enviarRequisicao(req)
 
+	if erro != nil {
+		fmt.Println("erro ao cadastrar posto")
+		return
+	}
 
+	err := receberResposta()
+	if err != nil {
+		fmt.Println("erro ao receber respsta depois de tentar cadastrar posto")
+		return
+	}
+}
 
-	} 
+func listarEImportarPosto() {
+	req := Requisicao{
+		Comando: "postos-salvos",
+		Dados:   json.RawMessage(`"postos-salvos"`),
+	}
+	//mutex.Lock()
+	erro := enviarRequisicao(req)
+	if erro != nil {
+		fmt.Println("erro ao enviar requisiçao para listar os postos salvos no arquivo")
+		return
+	}
+	time.Sleep(2 * time.Second) // Espera 1 segundo para garantir que a resposta seja recebida
+	resposta := receberResposta()
+	//mutex.Unlock()
+	//mutex.Unlock()
+	fmt.Println("resposta: ", resposta)
+	if resposta == nil {
+		fmt.Println("erro ao receber resposta depois de tentar listar os postos salvos no arquivo")
+		return
+	}
+	mapPosto := map[string]modelo.Posto{}
+	var postosNoArquivo *[]modelo.Posto
+	err := json.Unmarshal(resposta.Dados, &postosNoArquivo)
+	if err != nil {
+		fmt.Println("erro ao converter resposta dos postos no arquivo para JSON")
+	}
+	for i := range *postosNoArquivo {
+		mapPosto[(*postosNoArquivo)[i].ID] = (*postosNoArquivo)[i]
+		fmt.Printf("posto disponivel para importação ID: %s, Latitude: %f, Longitude: %f\n", (*postosNoArquivo)[i].ID, (*postosNoArquivo)[i].Latitude, (*postosNoArquivo)[i].Longitude)
+	}
+	var op string
+	fmt.Println("Digite o ID do posto que deseja importar:")
+	fmt.Scanln(&op)
+	postoDesejado, encontrado := mapPosto[op]
+	if postoDesejado.ID == "" || !encontrado {
+		fmt.Println("Posto não encontrado")
+		return
+	}
+	posto_criado = postoDesejado
+	fmt.Println("Posto importado com sucesso!")
+	fmt.Println("ID:", posto_criado.ID)	
+
+}
