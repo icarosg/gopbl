@@ -302,6 +302,7 @@ func listarPostos() []modelo.Posto {
 
 	for i := range postos {
 		posto := &postos[i]
+		fmt.Println("----------------------------------------")
 		fmt.Printf("ID: %s\n", posto.ID)
 		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
 		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
