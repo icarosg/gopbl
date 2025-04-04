@@ -1,1 +1,114 @@
-null
+[
+    {
+        "ID": "aaaaaaaaaaaaaaadddddddd",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "bbb",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "exxxxx",
+        "Latitude": 0,
+        "Longitude": 0,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "testandoOMutex",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "bct",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "testeF",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "ashajd",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "jkklll",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "10",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "ii",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "ex",
+        "Latitude": 20,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "testando",
+        "Latitude": 0,
+        "Longitude": 0,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "xibiu",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "asjklçç",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    }
+]

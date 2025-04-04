@@ -1,35 +1,53 @@
 [
     {
-        "ID": "mo",
-        "Latitude": 60,
-        "Longitude": 60,
+        "ID": "asjak",
+        "Latitude": 10,
+        "Longitude": 10,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
         "Pagamentos": null
     },
     {
-        "ID": "algo",
-        "Latitude": 70,
-        "Longitude": 70,
+        "ID": "jasjj",
+        "Latitude": 10,
+        "Longitude": 10,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
         "Pagamentos": null
     },
     {
-        "ID": "novo",
-        "Latitude": 55,
-        "Longitude": 55,
+        "ID": "new",
+        "Latitude": 45,
+        "Longitude": 40,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
         "Pagamentos": null
     },
     {
-        "ID": "novooo",
-        "Latitude": 50,
-        "Longitude": 50,
+        "ID": "asoai",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "qp",
+        "Latitude": 0,
+        "Longitude": 1,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "hsdjah",
+        "Latitude": 10,
+        "Longitude": 10,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
@@ -45,16 +63,7 @@
         "Pagamentos": null
     },
     {
-        "ID": "carro",
-        "Latitude": 50,
-        "Longitude": 50,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "a",
+        "ID": "aaa",
         "Latitude": 10,
         "Longitude": 10,
         "Bateria": 100,
@@ -63,7 +72,16 @@
         "Pagamentos": null
     },
     {
-        "ID": "aaa",
+        "ID": "aisj",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "aks",
         "Latitude": 10,
         "Longitude": 10,
         "Bateria": 100,
@@ -81,9 +99,54 @@
         "Pagamentos": null
     },
     {
-        "ID": "new",
-        "Latitude": 45,
-        "Longitude": 40,
+        "ID": "algo",
+        "Latitude": 70,
+        "Longitude": 70,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "asdj",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "askjd",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "jskd",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "60",
+        "Latitude": 70,
+        "Longitude": 70,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "mo",
+        "Latitude": 60,
+        "Longitude": 60,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
@@ -99,9 +162,63 @@
         "Pagamentos": null
     },
     {
-        "ID": "60",
-        "Latitude": 70,
-        "Longitude": 70,
+        "ID": "a",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "hsask",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "jk",
+        "Latitude": 9,
+        "Longitude": 0,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "carro",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "iu",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "novo",
+        "Latitude": 55,
+        "Longitude": 55,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "jjuk",
+        "Latitude": 10,
+        "Longitude": 10,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,

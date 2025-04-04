@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"gopbl/modelo"
 	"net"
+	"time"
+
 	//"time"
 	"sync"
 )
@@ -36,10 +38,11 @@ func main() {
 	defer conexao.Close()
 
 	fmt.Println("posto conectado à porta:", conexao.RemoteAddr())
-	posto_criado = modelo.NovoPosto("teste", 10, 10)
-
+	// posto := modelo.NovoPosto("teste", 10, 10)
+	// posto_criado = &posto
+	//retornarConexaoPosto()	
+	//go verificarAlgoNoBuffer()
 	selecionarObjetivo()
-	// 	go verificarAlgoNoBuffer()
 }
 
 func enviarRequisicao(req Requisicao) error {
@@ -65,13 +68,14 @@ func enviarRequisicao(req Requisicao) error {
 
 func receberResposta() *Requisicao {
 	buffer := make([]byte, 4096)
-
+	// Configura um timeout de 100ms
+    conexao.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 	mutex.Lock()
 	n, erro := conexao.Read(buffer)
 	mutex.Unlock()
 
 	if erro != nil {
-		fmt.Println("Erro ao receber a resposta")
+		//fmt.Println("Erro ao receber a resposta")
 		return nil
 	}
 
@@ -86,9 +90,13 @@ func receberResposta() *Requisicao {
 		return &response
 	case "get-posto":
 		return &response
+	case "cadastrou":
+		return &response
+	default:
+		return nil
 	}
 
-	return nil
+	//return nil
 }
 
 func retornarConexaoPosto() {
@@ -117,10 +125,16 @@ func retornarConexaoPosto() {
 }
 
 func verificarAlgoNoBuffer() {
+	//fmt.Println("verificando algo no buffer")
 	for {
+		//fmt.Println("to aki oh")
 		resposta := receberResposta()
+		//fmt.Println("sexo")
+		if resposta != nil {
+			fmt.Println(resposta.Comando)
+		}
 
-		if (resposta) != nil {
+		if resposta != nil{
 			if posto_criado.ID != "" {
 				var req Requisicao
 
@@ -136,12 +150,16 @@ func verificarAlgoNoBuffer() {
 						Dados:   postoJSON,
 					}
 					enviarRequisicao(req)
+				// case "cadastrar-posto":
+				// 	cadastrarPosto()
 				}
 
 			} else {
 				fmt.Println("Você ainda não possui um posto.")
 			}
+			//return
 		}
+		
 	}
 }
 
@@ -150,13 +168,13 @@ func selecionarObjetivo() {
 	go verificarAlgoNoBuffer()
 
 	for {
+		//verificarAlgoNoBuffer()
 		fmt.Printf("Digite 0 para cadastrar seu posto\n")
 		fmt.Printf("Digite 1 para listar os postos e importar algum\n")
 
 		fmt.Scanln(&opcao)
 		switch {
-		case opcao == 0:
-			fmt.Println("Cadastrar posto")
+		case opcao == 0:				
 			cadastrarPosto()
 
 		case opcao == 1:
@@ -166,19 +184,47 @@ func selecionarObjetivo() {
 		default:
 			fmt.Println("Opção inválida")
 		}
+		//verificarAlgoNoBuffer()
 	}
 }
 
-func cadastrarPosto() {
-	fmt.Println("Digite o ID do posto:")
-	fmt.Scanln(&id)
-	fmt.Println("Digite a latitude do posto:")
-	fmt.Scanln(&latitude)
-	fmt.Println("Digite a longitude do posto:")
-	fmt.Scanln(&longitude)
+func cadastrarPosto() {	
+	
+		fmt.Println("Cadastrar posto")
+		fmt.Println("Digite o ID do posto:")
+		fmt.Scanln(&id)
+		fmt.Println("Digite a latitude do posto:")
+		fmt.Scanln(&latitude)
+		fmt.Println("Digite a longitude do posto:")
+		fmt.Scanln(&longitude)	
 
-	posto_criado = modelo.NovoPosto(id, longitude, latitude)
-	// posto_criado = &posto
+		posto := modelo.NovoPosto(id, longitude, latitude)
+		posto_criado = posto
 
-	fmt.Println("Posto cadastrado com sucesso")
-}
+		postoJSON, erro := json.Marshal(posto_criado)
+		if erro != nil {
+			fmt.Printf("Erro ao converter posto para JSON: %v\n", erro)
+			return
+		}
+
+		req := Requisicao{
+			Comando: "cadastrar-posto",
+			Dados:   postoJSON,
+		}
+		
+		erro = enviarRequisicao(req)		
+
+		if erro != nil {
+			fmt.Println("erro ao cadastrar posto")
+			return
+		}
+
+		err := receberResposta()
+		if err != nil {
+			fmt.Println("erro ao receber respsta depois de tentar cadastrar posto")
+			return
+		}
+
+
+
+	} 
