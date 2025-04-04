@@ -47,13 +47,6 @@ var (
 	mutex                 sync.Mutex
 )
 
-var opcao int
-var (
-	id          string
-	latitude    float64
-	longitude   float64
-	selecionado *modelo.Posto
-)
 var goroutineCriada bool
 var ticker *time.Ticker
 
@@ -102,48 +95,13 @@ func main() {
 			conexoes_postos = append(conexoes_postos, conexao)
 			go posto(conexao)
 		} else {
-			conexoes_clientes = append(conexoes_postos, conexao)
+			conexoes_clientes = append(conexoes_clientes, conexao)
 			go cliente(conexao)
 		}
 
 		go AtualizarFilas()
-		go menu()
 	}
 
-}
-
-func menu() {
-	fmt.Printf("Digite 0 para cadastrar um posto\n")
-	fmt.Printf("Digite 1 para listar os postos\n")
-	fmt.Printf("Digite 2 para selecionar um posto e exibir a fila de veiculos\n")
-	fmt.Printf("Digite 3 para listar os veiculos\n")
-	fmt.Scanln(&opcao)
-	switch {
-	case opcao == 0:
-		fmt.Println("Cadastrar posto")
-		cadastrarPosto()
-	case opcao == 1:
-		fmt.Println("Listar postos")
-		listarPostosServidor()
-
-	case opcao == 2:
-		fmt.Println("Digite o id do posto que deseja selecionar:")
-		fmt.Scanln(&id)
-		for i := range postos {
-			if postos[i].ID == id {
-				selecionado = postos[i]
-				exibirFilaPosto(selecionado)
-				break
-			}
-		}
-
-	case opcao == 3:
-		fmt.Println("listar veiculos")
-		listarVeiculosServidor()
-
-	default:
-		fmt.Println("Opção inválida")
-	}
 }
 
 func cliente(conexao net.Conn) {
@@ -245,7 +203,7 @@ func posto(conexao net.Conn) {
 		case "cadastrar-posto":
 			testSalvarPosto(req,conexao)
 		case "postos-salvos":
-			enviarPostosSalvos(conexao)			
+			enviarPostosSalvos(conexao)					
 		}
 	}
 }
@@ -253,7 +211,7 @@ func posto(conexao net.Conn) {
 func enviarPostosSalvos(conexao net.Conn) {
 	postosMutex.Lock()
 	defer postosMutex.Unlock()
-
+	
 	nomeArquivo := "postos.json"
 	//mapPosto := map[string]modelo.Posto{}
 
@@ -287,7 +245,7 @@ func enviarPostosSalvos(conexao net.Conn) {
 		Comando: "postos-salvos",
 		Dados:   postosJSON,
 	}
-	fmt.Println(postosExistentesArquivo)
+	//fmt.Println(postosExistentesArquivo)
 	//time.Sleep(1 * time.Second) // Espera 1 segundo para garantir que a resposta seja recebida
 	teste := enviarResposta(conexao, req)
 	if teste != nil {
@@ -344,35 +302,6 @@ func inicializar() {
 		arquivoPostosCriados = true
 	}
 }
-
-
-// func salvarPostosNoArquivo() {
-// 	postosMutex.Lock()
-// 	defer postosMutex.Unlock()
-
-// 	armazenarPostosNaLista()
-
-// 	// converte a lista de postos para JSON
-// 	postosJSON, err := json.MarshalIndent(postos, "", "    ")
-// 	if err != nil {
-// 		log.Fatalf("Erro ao converter postos para JSON: %s", err)
-// 	}
-
-// 	// escreve o JSON em um arquivo
-// 	file, err := os.Create("postos.json")
-
-// 	if err != nil {
-// 		log.Fatalf("Erro ao criar o arquivo: %s", err)
-// 	}
-// 	defer file.Close()
-
-// 	_, err = file.Write(postosJSON)
-// 	if err != nil {
-// 		log.Fatalf("Erro ao escrever no arquivo: %s", err)
-// 	}
-
-// 	log.Println("Postos salvos em postos.json")
-// }
 
 func salvarPostoNoArquivo(nome string) {
 	// postosMutex.Lock()
@@ -488,67 +417,7 @@ func salvarNoArquivo(nome string) {
 	//log.Println("Veículos salvos em", nomeArquivo)
 }
 
-// func handler(w http.ResponseWriter, r *http.Request) {
-// 	http.ServeFile(w, r, "postos.json")
-// }
-
-func cadastrarPosto() {
-	fmt.Println("Cadastrar posto")
-	fmt.Println("Digite o ID do posto:")
-	fmt.Scanln(&id)
-	fmt.Println("Digite a latitude do posto:")
-	fmt.Scanln(&latitude)
-	fmt.Println("Digite a longitude do posto:")
-	fmt.Scanln(&longitude)
-
-	novoPosto := modelo.NovoPosto(id, latitude, longitude)
-
-	postosMutex.Lock()
-	postos = append(postos, &novoPosto)
-	postosMutex.Unlock()
-
-	salvarPostoNoArquivo("postos.json")
-
-	fmt.Println("Posto cadastrado com sucesso!")
-}
-
-func listarPostosServidor() {
-	for i := range postos {
-		posto := postos[i]
-		fmt.Printf("ID: %s\n", posto.ID)
-		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
-		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
-		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
-		fmt.Println("----------------------------------------")
-	}
-}
-
-func listarVeiculosServidor() {
-	for i := range veiculos {
-		veiculo := veiculos[i]
-		fmt.Printf("ID: %s\n", veiculo.ID)
-		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-		fmt.Println("----------------------------------------")
-	}
-}
-
-func exibirFilaPosto(posto *modelo.Posto) {
-	fmt.Printf("Fila do posto %s:\n", posto.ID)
-	for i := range posto.Fila {
-		veiculo := posto.Fila[i]
-		fmt.Printf("ID: %s\n", veiculo.ID)
-		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
-		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
-		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
-		fmt.Println("----------------------------------------")
-	}
-}
-
-func AtualizarFilas() {
+func AtualizarFilas() {	
 	for i := range postos {
 		p := postos[i]
 		go modelo.ArrumarPosicaoFila(p)
@@ -879,6 +748,7 @@ func enviarResposta(conexao net.Conn, resposta Requisicao) error {
 	}
 
 	_, erro = conexao.Write(dados)
+	//fmt.Println(dados)
 	if erro != nil {
 		log.Printf("Erro ao enviar resposta: %v", erro)
 		return erro
@@ -918,6 +788,8 @@ func receberResposta(conexao net.Conn) json.RawMessage {
 	case "get-posto":
 		return response.Dados
 	case "postos-salvos":
+		return response.Dados
+	case "add-fila":
 		return response.Dados
 	}
 

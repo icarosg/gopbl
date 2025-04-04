@@ -26,6 +26,7 @@ var (
 var posto_criado modelo.Posto
 var conexao net.Conn
 var mutex sync.Mutex
+var respostas = make(chan *Requisicao, 10) // canal com buffer
 
 func main() {
 	var erro error
@@ -41,8 +42,10 @@ func main() {
 	// posto := modelo.NovoPosto("teste", 10, 10)
 	// posto_criado = &posto
 	//retornarConexaoPosto()
-	//go verificarAlgoNoBuffer()
+	go verificarAlgoNoBuffer()
 	selecionarObjetivo()
+	
+	
 }
 
 func enviarRequisicao(req Requisicao) error {
@@ -93,7 +96,7 @@ func receberResposta() *Requisicao {
 	case "cadastrou":
 		return &response
 	case "postos-salvos":
-		fmt.Println("chegou aki")
+		//fmt.Println("chegou aki")
 		return &response
 	default:
 		fmt.Println("Comando desconhecido:", response.Comando)
@@ -105,7 +108,16 @@ func receberResposta() *Requisicao {
 
 func retornarConexaoPosto() {
 	for {
-		resp := receberResposta()
+		//resp := receberResposta()
+		var resp *Requisicao
+		timeout := time.After(2 * time.Second)
+		select {
+		case resp = <-respostas:
+			// tudo certo
+		case <-timeout:
+			fmt.Println("timeout esperando resposta")
+			return
+		}
 		if resp == nil {
 			fmt.Println("Erro ao retornar conexão do posto")
 			continue
@@ -134,13 +146,9 @@ func verificarAlgoNoBuffer() {
 		//mutex.Lock()
 		//fmt.Println("to aki oh")
 		resposta := receberResposta()
-
-		//fmt.Println("sexo")
 		if resposta != nil {
-			fmt.Println(resposta.Comando)
-		}
+			respostas <- resposta
 
-		if resposta != nil {
 			if posto_criado.ID != "" {
 				var req Requisicao
 
@@ -157,8 +165,9 @@ func verificarAlgoNoBuffer() {
 					}
 					enviarRequisicao(req)
 					// case "cadastrar-posto":
-					// 	cadastrarPosto()
+					// 	cadastrarPosto()				
 				}
+
 
 			} else {
 				fmt.Println("Você ainda não possui um posto.")
@@ -173,9 +182,9 @@ func verificarAlgoNoBuffer() {
 func selecionarObjetivo() {
 	retornarConexaoPosto()
 	//go verificarAlgoNoBuffer()
-
-	for {		
-			if posto_criado.ID == "" {
+	
+		for {		
+			// if posto_criado.ID == "" {
 				fmt.Printf("Digite 0 para cadastrar seu posto\n")
 				fmt.Printf("Digite 1 para listar os postos e importar algum\n")
 				fmt.Scanln(&opcao)
@@ -191,14 +200,16 @@ func selecionarObjetivo() {
 				default:
 					fmt.Println("Opção inválida")
 				}
-			} else {
-				go verificarAlgoNoBuffer()
-			}
+			// } else {
+			// 	go verificarAlgoNoBuffer()
+			// }
 			
 		
-
-	}
+			}
+	
 }
+	
+
 
 func cadastrarPosto() {
 
@@ -230,8 +241,18 @@ func cadastrarPosto() {
 		fmt.Println("erro ao cadastrar posto")
 		return
 	}
+	var err *Requisicao
+	timeout := time.After(2 * time.Second)
 
-	err := receberResposta()
+	select {
+	case err = <-respostas:
+		// tudo certo
+	case <-timeout:
+		fmt.Println("timeout esperando resposta")
+		return
+	}
+
+	//err := receberResposta()
 	if err != nil {
 		fmt.Println("erro ao receber respsta depois de tentar cadastrar posto")
 		return
@@ -249,13 +270,22 @@ func listarEImportarPosto() {
 		fmt.Println("erro ao enviar requisiçao para listar os postos salvos no arquivo")
 		return
 	}
-	time.Sleep(2 * time.Second) // Espera 1 segundo para garantir que a resposta seja recebida
-	resposta := receberResposta()
+	var resposta *Requisicao
+	//time.Sleep(2 * time.Second) // Espera 1 segundo para garantir que a resposta seja recebida
+	timeout := time.After(2 * time.Second)
+	//resposta := receberResposta()
 	//mutex.Unlock()
 	//mutex.Unlock()
-	fmt.Println("resposta: ", resposta)
-	if resposta == nil {
-		fmt.Println("erro ao receber resposta depois de tentar listar os postos salvos no arquivo")
+	// fmt.Println("resposta: ", resposta)
+	// if resposta == nil {
+	// 	fmt.Println("erro ao receber resposta depois de tentar listar os postos salvos no arquivo")
+	// 	return
+	// }
+	select {
+	case resposta = <-respostas:
+		// tudo certo
+	case <-timeout:
+		fmt.Println("timeout esperando resposta")
 		return
 	}
 	mapPosto := map[string]modelo.Posto{}
@@ -279,5 +309,12 @@ func listarEImportarPosto() {
 	posto_criado = postoDesejado
 	fmt.Println("Posto importado com sucesso!")
 	fmt.Println("ID:", posto_criado.ID)	
-
+	// requi := Requisicao{
+	// 	Comando: "add-fila",
+	// }
+	// ej := enviarRequisicao(requi)
+	// if ej != nil {
+	// 	fmt.Println("erro ao enviar requisição para adicionar o posto na fila")
+	// 	return
+	// }
 }
