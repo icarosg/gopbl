@@ -47,8 +47,17 @@ var (
 	mutex                 sync.Mutex
 )
 
-var goroutineCriada bool
-var ticker *time.Ticker
+var (
+	id          string
+	latitude    float64
+	longitude   float64
+	selecionado *modelo.Posto
+)
+
+var opcao int
+
+// var goroutineCriada bool
+// var ticker *time.Ticker
 
 var arquivoPostosCriados bool = false
 
@@ -64,17 +73,17 @@ func main() {
 	fmt.Println("Servidor iniciado em localhost:8080")
 	inicializar()
 
-	if postos != nil {
-		if !goroutineCriada {
-			ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada 5 segundos
-			go func() {
-				for range ticker.C {
-					AtualizarFilas()
-				}
-			}()
-			goroutineCriada = true
-		}
-	}
+	// if postos != nil {
+	// 	if !goroutineCriada {
+	// 		ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada 5 segundos
+	// 		go func() {
+	// 			for range ticker.C {
+	// 				atualizarFilas()
+	// 			}
+	// 		}()
+	// 		goroutineCriada = true
+	// 	}
+	// }
 
 	for {
 		conexao, erro := listener.Accept()
@@ -90,7 +99,7 @@ func main() {
 		fmt.Println("Cliente conectado à porta:", conexao.RemoteAddr())
 		fmt.Println("Total de clientes conectados:", getQtdClientes())
 
-		tipo := TipoDeCliente(conexao)
+		tipo := tipoDeCliente(conexao)
 		if tipo == "posto" {
 			conexoes_postos = append(conexoes_postos, conexao)
 			go posto(conexao)
@@ -99,7 +108,8 @@ func main() {
 			go cliente(conexao)
 		}
 
-		go AtualizarFilas()
+		go atualizarFilas()
+		//go menu()
 	}
 
 }
@@ -204,6 +214,65 @@ func posto(conexao net.Conn) {
 			testSalvarPosto(req,conexao)
 		case "postos-salvos":
 			enviarPostosSalvos(conexao)					
+
+		case "reservar-vaga-retornoPosto":
+			//envia a resposta para o veículo
+			var dados *modelo.RetornarVagaJson
+			erro := json.Unmarshal(req.Dados, &dados)
+			if erro != nil {
+				fmt.Println("Erro ao decodificar JSON", erro)
+				return
+			}
+
+			resposta := modelo.RecomendadoResponse{
+				ID_posto:  dados.Posto.ID,
+				Latitude:  dados.Posto.Latitude,
+				Longitude: dados.Posto.Longitude,
+				// Posicao_na_fila: modelo.GetPosFila(*veiculo, postoRecebido),
+			}
+
+			respostaJSON, err := json.Marshal(resposta)
+			if err != nil {
+				fmt.Println("Erro ao codificar resposta")
+				return
+			}
+			respostaRequisicao := Requisicao{
+				Comando: "new-vaga",
+				Dados:   respostaJSON,
+			}
+
+			fmt.Println("enviando a resposta do reservar vaga")
+			fmt.Println("conex clientes", conexoes_clientes)
+			enviarResposta(conexoes_clientes[0], respostaRequisicao)
+
+		case "atualizar-posicao-veiculo":
+			//envia a resposta para o veículo
+			var dados modelo.RetornarAtualizarPosicaoFila
+			erro := json.Unmarshal(req.Dados, &dados)
+			if erro != nil {
+				fmt.Println("Erro ao decodificar JSON", erro)
+				return
+			}
+
+			resposta := modelo.RetornarAtualizarPosicaoFila{
+				Veiculo: dados.Veiculo,
+				Posto:   dados.Posto,
+				// Posicao_na_fila: modelo.GetPosFila(*veiculo, postoRecebido),
+			}
+
+			respostaJSON, err := json.Marshal(resposta)
+			if err != nil {
+				fmt.Println("Erro ao codificar resposta")
+				return
+			}
+			respostaRequisicao := Requisicao{
+				Comando: "atualizar-posicao-veiculo",
+				Dados:   respostaJSON,
+			}
+
+			fmt.Println("enviando a resposta do atualizar fila")
+			fmt.Println("conex clientes", conexoes_clientes[0])
+			enviarResposta(conexoes_clientes[0], respostaRequisicao)
 		}
 	}
 }
@@ -417,12 +486,68 @@ func salvarNoArquivo(nome string) {
 	//log.Println("Veículos salvos em", nomeArquivo)
 }
 
-func AtualizarFilas() {	
-	for i := range postos {
-		p := postos[i]
-		go modelo.ArrumarPosicaoFila(p)
-	}
+func cadastrarPosto() {
+	fmt.Println("Cadastrar posto")
+	fmt.Println("Digite o ID do posto:")
+	fmt.Scanln(&id)
+	fmt.Println("Digite a latitude do posto:")
+	fmt.Scanln(&latitude)
+	fmt.Println("Digite a longitude do posto:")
+	fmt.Scanln(&longitude)
+
+	novoPosto := modelo.NovoPosto(id, latitude, longitude)
+
+	postosMutex.Lock()
+	postos = append(postos, &novoPosto)
+	postosMutex.Unlock()
+
+	salvarPostosNoArquivo()
+
+	fmt.Println("Posto cadastrado com sucesso!")
 }
+
+// func listarPostosServidor() {
+// 	for i := range postos {
+// 		posto := postos[i]
+// 		fmt.Printf("ID: %s\n", posto.ID)
+// 		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
+// 		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
+// 		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
+// 		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
+// 		fmt.Println("----------------------------------------")
+// 	}
+// }
+
+// func listarVeiculosServidor() {
+// 	for i := range veiculos {
+// 		veiculo := veiculos[i]
+// 		fmt.Printf("ID: %s\n", veiculo.ID)
+// 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+// 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+// 		fmt.Println("----------------------------------------")
+// 	}
+// }
+
+// func exibirFilaPosto(posto *modelo.Posto) {
+// 	fmt.Printf("Fila do posto %s:\n", posto.ID)
+// 	for i := range posto.Fila {
+// 		veiculo := posto.Fila[i]
+// 		fmt.Printf("ID: %s\n", veiculo.ID)
+// 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+// 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+// 		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
+// 		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
+// 		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
+// 		fmt.Println("----------------------------------------")
+// 	}
+// }
+
+// func atualizarFilas() {
+// 	for i := range postos {
+// 		p := postos[i]
+// 		go modelo.ArrumarPosicaoFila(p)
+// 	}
+// }
 
 func cadastrarVeiculo(req Requisicao) {
 	//aki tava travando o sistema
@@ -495,126 +620,106 @@ func listarVeiculos(conexao net.Conn) {
 func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 	// postosMutex.Lock()
 	// defer postosMutex.Unlock()
+	armazenarPostosNaLista()
 
 	// decodifica o JSON do body da req
 	var pagamentoJson modelo.PagamentoJson
-	err := json.Unmarshal(requisicao.Dados, &pagamentoJson)
-	if err != nil {
+	erro := json.Unmarshal(requisicao.Dados, &pagamentoJson)
+	if erro != nil {
 		fmt.Println("Erro ao decodificar JSON")
 		return
 	}
 
-	var veiculo *modelo.Veiculo
-	for i := range veiculos {
-		if veiculos[i].ID == pagamentoJson.ID_veiculo {
-			veiculo = veiculos[i]
-			break
-		}
-	}
-
 	// procura o posto pelo ID
-	var posto *modelo.Posto
+	var conexaoPosto net.Conn
 	for i := range postos {
 		if postos[i].ID == pagamentoJson.ID_posto {
-			posto = postos[i]
+			conexaoPosto = conexoes_postos[i]
 			break
 		}
 	}
 
-	if posto == nil {
+	if conexaoPosto == nil {
 		fmt.Println("Posto não encontrado")
 		return
 	}
 
-	if veiculo == nil {
-		fmt.Println("Posto não encontrado")
-		return
+	veiculoConexao := modelo.ReservarVagaJson{
+		Veiculo: pagamentoJson.Veiculo,
 	}
 
-	reservado := modelo.ReservarVaga(posto, veiculo)
-	if reservado {
-		fmt.Printf("Vaga reservada com sucesso para o veículo %s no posto %s\n", veiculo.ID, posto.ID)
-	} else {
-		fmt.Printf("Veículo %s adicionado à fila do posto %s\n", veiculo.ID, posto.ID)
-	}
-	resposta := modelo.RecomendadoResponse{
-		ID_posto:        posto.ID,
-		Latitude:        posto.Latitude,
-		Longitude:       posto.Longitude,
-		Posicao_na_fila: modelo.GetPosFila(*veiculo, posto),
-	}
-
-	respostaJSON, err := json.Marshal(resposta)
+	req, err := json.Marshal(veiculoConexao)
 	if err != nil {
-		fmt.Println("Erro ao codificar resposta")
+		fmt.Printf("Erro ao converter veículo e conexão para JSON: %v\n", err)
 		return
 	}
-	respostaRequisicao := Requisicao{
+
+	res := Requisicao{
 		Comando: "reservar-vaga",
-		Dados:   respostaJSON,
+		Dados:   req,
 	}
-	enviarResposta(conexao, respostaRequisicao)
+
+	enviarResposta(conexaoPosto, res)
 }
 
 func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
+	armazenarPostosNaLista()
+
 	// decodifica o JSON do body da req
-	var attPosicaoVeiculoJson modelo.AtualizarPosicaoNaFila
-	err := json.Unmarshal(requisicao.Dados, &attPosicaoVeiculoJson)
-	if err != nil {
+	var attPos modelo.AtualizarPosicaoNaFila
+	erro := json.Unmarshal(requisicao.Dados, &attPos)
+	if erro != nil {
 		fmt.Println("Erro ao decodificar JSON")
 		return
 	}
 
-	var veiculo *modelo.Veiculo
-	for i := range veiculos {
-		if veiculos[i].ID == attPosicaoVeiculoJson.Veiculo.ID {
-			veiculo = &attPosicaoVeiculoJson.Veiculo
-			break
-		}
-	}
-
 	// procura o posto pelo ID
-	var posto *modelo.Posto
+	var conexaoPosto net.Conn
 	for i := range postos {
-		if postos[i].ID == attPosicaoVeiculoJson.ID_posto {
-			posto = postos[i]
+		if postos[i].ID == attPos.ID_posto {
+			conexaoPosto = conexoes_postos[i]
 			break
 		}
 	}
 
-	if posto == nil {
-		fmt.Println("Posto não encontrado para atualização da posição do veículo")
+	if conexaoPosto == nil {
+		fmt.Println("Posto não encontrado")
 		return
 	}
 
-	if veiculo == nil {
-		fmt.Println("Veiculo não encontrado para atualização da posição do veículo")
+	veiculoConexao := modelo.ReservarVagaJson{
+		Veiculo: attPos.Veiculo,
+	}
+
+	req, erro := json.Marshal(veiculoConexao)
+	if erro != nil {
+		fmt.Printf("Erro ao converter veículo para JSON: %v\n", erro)
 		return
 	}
 
-	reservado := modelo.ReservarVaga(posto, veiculo)
-	if reservado {
-		fmt.Printf("(DESLOCANDO AO POSTO) Posição do veículo %s atualizado para a latitude e longitude: %v, %v\n", veiculo.ID, veiculo.Latitude, veiculo.Longitude)
-	} else {
-		fmt.Printf("ALGUM PROBLEMA DEU")
-	}
-	resposta := modelo.RecomendadoResponse{
-		ID_posto:        posto.ID,
-		Latitude:        posto.Latitude,
-		Longitude:       posto.Longitude,
-		Posicao_na_fila: modelo.GetPosFila(*veiculo, posto),
-	}
+	// reservado := modelo.ReservarVaga(posto, veiculo)
+	// if reservado {
+	// 	fmt.Printf("(DESLOCANDO AO POSTO) Posição do veículo %s atualizado para a latitude e longitude: %v, %v\n", veiculo.ID, veiculo.Latitude, veiculo.Longitude)
+	// } else {
+	// 	fmt.Printf("ALGUM PROBLEMA DEU")
+	// }
+	// resposta := modelo.RecomendadoResponse{
+	// 	ID_posto:        posto.ID,
+	// 	Latitude:        posto.Latitude,
+	// 	Longitude:       posto.Longitude,
+	// 	Posicao_na_fila: modelo.GetPosFila(*veiculo, posto),
+	// }
 
-	respostaJSON, err := json.Marshal(resposta)
-	if err != nil {
-		fmt.Println("Erro ao codificar resposta")
-		return
-	}
+	// respostaJSON, err := json.Marshal(resposta)
+	// if err != nil {
+	// 	fmt.Println("Erro ao codificar resposta")
+	// 	return
+	// }
 	respostaRequisicao := Requisicao{
 		Comando: "atualizar-posicao-veiculo",
-		Dados:   respostaJSON,
+		Dados:   req,
 	}
-	enviarResposta(conexao, respostaRequisicao)
+	enviarResposta(conexaoPosto, respostaRequisicao)
 }
 
 func postoRecomendado(conexao net.Conn, req Requisicao) {
@@ -628,6 +733,8 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 		fmt.Println("Erro ao achar posto recomendado")
 		return
 	}
+
+	armazenarPostosNaLista()
 
 	var menor_tempo time.Duration = -1
 	var postoRecomendado *modelo.Posto
@@ -660,7 +767,7 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 		ID_posto:        postoRecomendado.ID,
 		Latitude:        postoRecomendado.Latitude,
 		Longitude:       postoRecomendado.Longitude,
-		Posicao_na_fila: posicaoFila,
+		//Posicao_na_fila: posicaoFila,
 	}
 
 	respostaJSON, err := json.Marshal(recomendadoResponse)
@@ -677,7 +784,7 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 	enviarResposta(conexao, response)
 }
 
-func TipoDeCliente(conexao net.Conn) string {
+func tipoDeCliente(conexao net.Conn) string {
 	pergunta := Requisicao{
 		Comando: "tipo-cliente",
 		Dados:   json.RawMessage(`"tipo-cliente"`),
@@ -702,26 +809,26 @@ func TipoDeCliente(conexao net.Conn) string {
 }
 
 func armazenarPostosNaLista() {
-    postos = nil //limpa os postos
+	postos = nil //limpa os postos
 
-    //percorre a lista das conexoes que sao postos
-    for i := range conexoes_postos {
-        conexaoPosto := conexoes_postos[i]
-        req := Requisicao{
-            Comando: "get-posto",
-        }
-        //envia a requisiçao pra conexao de um posto para ele responder com o posto cadastrado ou importado
-        err := enviarResposta(conexaoPosto, req)
-        if err != nil {
-            fmt.Println("erro ao enviar requisição pra esse posto")
-            return
-        }
-    }
+	//percorre a lista das conexoes que sao postos
+	for i := range conexoes_postos {
+		conexaoPosto := conexoes_postos[i]
+		req := Requisicao{
+			Comando: "get-posto",
+		}
+		//envia a requisiçao pra conexao de um posto para ele responder com o posto cadastrado ou importado
+		err := enviarResposta(conexaoPosto, req)
+		if err != nil {
+			fmt.Println("erro ao enviar requisição pra esse posto")
+			return
+		}
+	}
 
-    time.Sleep(1 * time.Second) // aguarda por 1 segundo
+	time.Sleep(1 * time.Second) // aguarda por 1 segundo
 }
 
-func listarPostos(conexao net.Conn) {		
+func listarPostos(conexao net.Conn) {
 	armazenarPostosNaLista()
 
 	// converte a lista de postos para JSON

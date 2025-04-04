@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"gopbl/modelo"
 	"net"
-	"time"
-
-	//"time"
 	"sync"
+	"time"
 )
 
 type Requisicao struct {
@@ -16,17 +14,19 @@ type Requisicao struct {
 	Dados   json.RawMessage `json:"dados"`
 }
 
-var opcao int
 var (
 	id        string
 	latitude  float64
 	longitude float64 //bateria   float64
 )
 
+var opcao int
+
 var posto_criado modelo.Posto
 var conexao net.Conn
 var mutex sync.Mutex
 var respostas = make(chan *Requisicao, 10) // canal com buffer
+var buffer = make([]byte, 4096)
 
 func main() {
 	var erro error
@@ -59,18 +59,17 @@ func enviarRequisicao(req Requisicao) error {
 	_, erro = conexao.Write(dados)
 	mutex.Unlock()
 
-	fmt.Println("enviado")
-
 	if erro != nil {
 		fmt.Println("Erro ao enviar a requisição")
 		return erro
 	}
 
+	fmt.Println("enviado")
+
 	return nil
 }
 
 func receberResposta() *Requisicao {
-	buffer := make([]byte, 4096)
 	// Configura um timeout de 100ms
 	conexao.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 	mutex.Lock()
@@ -96,7 +95,10 @@ func receberResposta() *Requisicao {
 	case "cadastrou":
 		return &response
 	case "postos-salvos":
-		//fmt.Println("chegou aki")
+		return &response
+  case "reservar-vaga":
+		return &response
+	case "atualizar-posicao-veiculo":
 		return &response
 	default:
 		fmt.Println("Comando desconhecido:", response.Comando)
@@ -164,8 +166,11 @@ func verificarAlgoNoBuffer() {
 						Dados:   postoJSON,
 					}
 					enviarRequisicao(req)
-					// case "cadastrar-posto":
-					// 	cadastrarPosto()				
+				case "reservar-vaga":
+					reservarVaga(resposta.Dados)
+
+				case "atualizar-posicao-veiculo":
+					atualizarPosicaoFila(resposta.Dados)
 				}
 
 
@@ -317,4 +322,76 @@ func listarEImportarPosto() {
 	// 	fmt.Println("erro ao enviar requisição para adicionar o posto na fila")
 	// 	return
 	// }
+}
+
+func reservarVaga(r json.RawMessage) {
+	var dados modelo.ReservarVagaJson
+	erro := json.Unmarshal(r, &dados)
+	if erro != nil {
+		fmt.Println("Erro ao decodificar JSON", erro)
+		return
+	}
+
+	fmt.Println("dados do veículo", dados.Veiculo)
+	modelo.ReservarVaga(&posto_criado, &dados.Veiculo)
+
+	//envia a requisição para o servidor para enviar a resposta para o veículo
+	veiculoConexao := modelo.RetornarVagaJson{
+		Posto: posto_criado,
+	}
+
+	req, err := json.Marshal(veiculoConexao)
+	if err != nil {
+		fmt.Printf("Erro ao converter veículo e conexão para JSON: %v\n", err)
+		return
+	}
+
+	res := Requisicao{
+		Comando: "reservar-vaga-retornoPosto",
+		Dados:   req,
+	}
+	enviarRequisicao(res)
+
+	time.Sleep(1 * time.Second) // aguarda por 1 segundo
+}
+
+func atualizarPosicaoFila(r json.RawMessage) {
+	var dados modelo.ReservarVagaJson
+	erro := json.Unmarshal(r, &dados)
+	if erro != nil {
+		fmt.Println("Erro ao decodificar JSON", erro)
+		return
+	}
+
+	//modelo.ReservarVaga(&posto_criado, &dados.Veiculo)
+	modelo.ArrumarPosicaoFila(&posto_criado)
+
+	var veiculoDadosAtualizados modelo.Veiculo
+
+	fmt.Printf("\n\nFila atual do posto:\n")
+	for i := range posto_criado.Fila {
+		fmt.Printf("Posição %d: ID VEÍCULO: %s", i, posto_criado.Fila[i].ID)
+
+		if &dados.Veiculo.ID == &posto_criado.Fila[i].ID {
+			veiculoDadosAtualizados = *posto_criado.Fila[i]
+		}
+	}
+
+	//envia a requisição para o servidor para enviar a resposta para o veículo
+	data := modelo.RetornarAtualizarPosicaoFila{
+		Veiculo: veiculoDadosAtualizados,
+		Posto:   posto_criado,
+	}
+
+	req, err := json.Marshal(data)
+	if err != nil {
+		fmt.Printf("Erro ao converter veículo e para JSON: %v\n", err)
+		return
+	}
+
+	res := Requisicao{
+		Comando: "atualizar-posicao-veiculo",
+		Dados:   req,
+	}
+	enviarRequisicao(res)
 }
