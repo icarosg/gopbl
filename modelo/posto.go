@@ -37,11 +37,6 @@ func ReservarVaga(p *Posto, v *Veiculo) bool {
 	// p.mu.Lock()
 	// defer p.mu.Unlock()
 
-	// if !p.BombaOcupada && p.Latitude == v.Latitude && p.Longitude == v.Longitude {
-	// 	p.BombaOcupada = true
-	// 	fmt.Printf("Posto %s: Vaga reservada para veículo %s.", p.ID, v.ID)
-	// 	return true
-	// }
 	veiculoJaEstaNaFila := false
 
 	for i := range p.Fila {
@@ -142,7 +137,7 @@ func ArrumarPosicaoFila(p *Posto) {
 		veiculo := p.Fila[i]
 		if !veiculo.IsCarregando && veiculo.Latitude == p.Latitude && veiculo.Longitude == p.Longitude && !p.BombaOcupada {
 			// Se o veículo já está no posto e a bomba não está ocupada, inicia o carregamento
-			//carreega o primeiro veiculo da fila e o remove da fila para poder arrumar a fila
+			//carrega o primeiro veiculo da fila e o remove da fila para poder arrumar a fila
 			CarregarBateria(veiculo, p)
 			p.Fila = append(p.Fila[:i], p.Fila[i+1:]...) // remove o veículo da fila; índice do primeiro elemento a ser removido e índice após o último elemento a ser removido
 			fmt.Printf("Posto %s: Veículo %s removido da fila e iniciando carregamento\n", p.ID, veiculo.ID)

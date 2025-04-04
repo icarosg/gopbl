@@ -93,7 +93,8 @@ func receberResposta() json.RawMessage {
 		return response.Dados
 	case "listar-veiculos":
 		return response.Dados
-	case "reservar-vaga":
+	case "new-vaga":
+		fmt.Println("passou por cá")
 		return response.Dados
 	case "atualizar-posicao-veiculo":
 		return response.Dados
@@ -135,13 +136,14 @@ func selecionarObjetivo() {
 	for {
 		if veiculo.ID != "" {
 			if !goroutineCriada {
-				ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada 5 segundos
+				ticker = time.NewTicker(10 * time.Second) // temporizador faz com que chame a função a cada 5 segundos
 				go func() {
 					for range ticker.C {
 						if veiculo.IsDeslocandoAoPosto {
-							modelo.DeslocarParaPosto(&veiculo, posto_selecionado)
+							modelo.DeslocarParaPosto(&veiculo, posto_selecionado) // altera a posição para ir para o posto e faz a requisição para salvar nova posição na fila do posto
 							atualizarPosicaoVeiculoNaFila()
-							modelo.ArrumarPosicaoFila(posto_selecionado)
+							fmt.Println("teste")
+							// modelo.ArrumarPosicaoFila(posto_selecionado)
 						} else {
 							modelo.AtualizarLocalizacao(&veiculo)
 						}
@@ -277,15 +279,13 @@ func listarEImportarVeiculo() []modelo.Veiculo {
 }
 
 func listarPostos() []modelo.Posto {
-	//fiz a requisicao para listar os postos GET
 	req := Requisicao{
 		Comando: "listar-postos",
 	}
 
 	enviarRequisicao(req)
 
-	time.Sleep(1 * time.Second) // aguarda por 1 segundo
-	time.Sleep(1 * time.Second) // aguarda por 1 segundo
+	time.Sleep(2 * time.Second) // aguarda por 2 segundos
 	resp := receberResposta()
 	if resp == nil {
 		fmt.Println("Erro ao listar postos")
@@ -300,7 +300,6 @@ func listarPostos() []modelo.Posto {
 		return nil
 	}
 
-	//printando as informacoes dos postos
 	for i := range postos {
 		posto := &postos[i]
 		fmt.Printf("ID: %s\n", posto.ID)
@@ -333,6 +332,8 @@ func encontrarPostoRecomendado() {
 		return
 	}
 
+	time.Sleep(2 * time.Second) // aguarda por 2 segundos
+
 	resposta := receberResposta()
 	if resposta == nil {
 		fmt.Println("Erro ao receber resposta")
@@ -351,7 +352,7 @@ func encontrarPostoRecomendado() {
 	fmt.Printf("Posto recomendado: %s\n", recomendado.ID_posto)
 	fmt.Printf("Latitude: %.4f\n", recomendado.Latitude)
 	fmt.Printf("Longitude: %.4f\n", recomendado.Longitude)
-	fmt.Printf("Posição na fila: %d\n", recomendado.Posicao_na_fila)
+	//fmt.Printf("Posição na fila: %d\n", recomendado.Posicao_na_fila)
 	fmt.Println("*******************************************************")
 }
 
@@ -399,9 +400,9 @@ func reservarVaga() {
 	}
 	// var pagamentoFeito modelo.PagamentoJson
 	pagamentoFeito := modelo.PagamentoJson{
-		ID_veiculo: veiculo.ID,
-		Valor:      valorPraPagar,
-		ID_posto:   posto_selecionado.ID,
+		Veiculo:  veiculo,
+		Valor:    valorPraPagar,
+		ID_posto: posto_selecionado.ID,
 	}
 	req, err := json.Marshal(pagamentoFeito)
 	if err != nil {
@@ -420,6 +421,8 @@ func reservarVaga() {
 		fmt.Println("erro ao enviar requisiçao")
 	}
 
+	time.Sleep(2 * time.Second) // aguarda por 2 segundos
+
 	resp := receberResposta()
 	if resp == nil {
 		fmt.Println("Erro ao listar postos")
@@ -428,20 +431,18 @@ func reservarVaga() {
 
 	//to convertendo o JSON para um slice de postos
 	var vagaFeita RecomendadoResponse
-	erroo := json.Unmarshal(resp, &vagaFeita)
-	if erroo != nil {
-		fmt.Println("Erro ao converter JSON da resposta:", erroo)
+	erro = json.Unmarshal(resp, &vagaFeita)
+	if erro != nil {
+		fmt.Println("Erro ao converter JSON da resposta:", erro)
 		return
 	}
 
-	//adiciona o veículo à fila do posto, para simular como o do servidor
-	posto_selecionado.Fila = append(posto_selecionado.Fila, &veiculo)
 	veiculo.IsDeslocandoAoPosto = true //ao reservar, automaticamente o veículo começa se deslocar para o posto
 
 	fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
 	fmt.Println("latitude: ", vagaFeita.Latitude)
 	fmt.Println("longitude: ", vagaFeita.Longitude)
-	fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
+	// fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
 }
 
 func atualizarPosicaoVeiculoNaFila() {
@@ -466,9 +467,26 @@ func atualizarPosicaoVeiculoNaFila() {
 		fmt.Println("erro ao enviar requisiçao")
 	}
 
+	time.Sleep(2 * time.Second) // aguarda por 2 segundos
+
 	resp := receberResposta()
 	if resp == nil {
 		fmt.Println("Erro ao receber resposta da atualização da localização do veículo")
 		return
 	}
+
+	var dados modelo.RetornarAtualizarPosicaoFila
+	erro = json.Unmarshal(resp, &dados)
+	if erro != nil {
+		fmt.Println("Erro ao decodificar JSON", erro)
+		return
+	}
+
+	veiculo = dados.Veiculo
+	posto_selecionado = &dados.Posto
+
+	if !veiculo.IsDeslocandoAoPosto {
+		fmt.Printf("Posto %s: Veículo %s removido da fila e iniciando carregamento\n", posto_selecionado.ID, veiculo.ID)
+	}
+
 }
