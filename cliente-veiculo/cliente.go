@@ -94,7 +94,7 @@ func receberResposta() json.RawMessage {
 	case "listar-veiculos":
 		return response.Dados
 	case "new-vaga":
-		fmt.Println("passou por cá")
+		// fmt.Println("passou por cá")
 		return response.Dados
 	case "atualizar-posicao-veiculo":
 		return response.Dados
@@ -142,7 +142,6 @@ func selecionarObjetivo() {
 						if veiculo.IsDeslocandoAoPosto {
 							modelo.DeslocarParaPosto(&veiculo, posto_selecionado) // altera a posição para ir para o posto e faz a requisição para salvar nova posição na fila do posto
 							atualizarPosicaoVeiculoNaFila()
-							fmt.Println("teste")
 							// modelo.ArrumarPosicaoFila(posto_selecionado)
 						} else {
 							modelo.AtualizarLocalizacao(&veiculo)
@@ -447,6 +446,8 @@ func reservarVaga() {
 }
 
 func atualizarPosicaoVeiculoNaFila() {
+	fmt.Println("vei", veiculo)
+
 	attPosicao := modelo.AtualizarPosicaoNaFila{
 		Veiculo:  veiculo,
 		ID_posto: posto_selecionado.ID,
@@ -483,11 +484,14 @@ func atualizarPosicaoVeiculoNaFila() {
 		return
 	}
 
+	fmt.Printf("\n\n\n\nveiculo recebido: %f %f %t", dados.Veiculo.Latitude, dados.Veiculo.Longitude, dados.Veiculo.IsDeslocandoAoPosto)
+	fmt.Println("postorecebido:", &dados.Posto)
+
 	veiculo = dados.Veiculo
 	posto_selecionado = &dados.Posto
 
 	if !veiculo.IsDeslocandoAoPosto {
-		fmt.Printf("Posto %s: Veículo %s removido da fila e iniciando carregamento\n", posto_selecionado.ID, veiculo.ID)
+		fmt.Printf("Posto %s: Veículo %s removido da fila e finalizado o seu carregamento\n", posto_selecionado.ID, veiculo.ID)
 	}
 
 }

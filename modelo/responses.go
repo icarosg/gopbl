@@ -1,9 +1,9 @@
 package modelo
 
 type RecomendadoResponse struct {
-	ID_posto        string  `json:"id_posto"`
-	Latitude        float64 `json:"latitude"`
-	Longitude       float64 `json:"longitude"`
+	ID_posto  string  `json:"id_posto"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 type PagamentoJson struct {
@@ -12,8 +12,15 @@ type PagamentoJson struct {
 	ID_posto string  `json:"id_posto"`
 }
 
+// type estruturaVeiculo struct {
+// 	Latitude            float64 `json:"latitude"`
+// 	Longitude           float64 `json:"longitude"`
+// 	IsDeslocandoAoPosto bool    `json:"isDeslocandoAoPosto"`
+// 	IsCarregando        bool    `json:"isCarregando"`
+// }
+
 type ReservarVagaJson struct {
-	Veiculo Veiculo `json:"id_veiculo"`
+	Veiculo Veiculo `json:"veiculo"`
 }
 
 type RetornarVagaJson struct {

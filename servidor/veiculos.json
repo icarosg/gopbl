@@ -1,8 +1,71 @@
 [
     {
+        "ID": "120",
+        "Latitude": 120,
+        "Longitude": 120,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "te",
+        "Latitude": 20,
+        "Longitude": 20,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "ne",
+        "Latitude": 90,
+        "Longitude": 90,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "new",
+        "Latitude": 80,
+        "Longitude": 80,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
         "ID": "60",
         "Latitude": 70,
         "Longitude": 70,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "test",
+        "Latitude": 20,
+        "Longitude": 20,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "novo",
+        "Latitude": 20,
+        "Longitude": 20,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "",
+        "Latitude": 0,
+        "Longitude": 0,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,

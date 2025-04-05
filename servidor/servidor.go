@@ -109,9 +109,43 @@ func main() {
 		}
 
 		go atualizarFilas()
-		//go menu()
+		go menu()
 	}
 
+}
+
+func menu() {
+	fmt.Printf("Digite 0 para cadastrar um posto\n")
+	fmt.Printf("Digite 1 para listar os postos\n")
+	fmt.Printf("Digite 2 para selecionar um posto e exibir a fila de veiculos\n")
+	fmt.Printf("Digite 3 para listar os veiculos\n")
+	fmt.Scanln(&opcao)
+	switch {
+	case opcao == 0:
+		fmt.Println("Cadastrar posto")
+		cadastrarPosto()
+	case opcao == 1:
+		fmt.Println("Listar postos")
+		listarPostosServidor()
+
+	case opcao == 2:
+		fmt.Println("Digite o id do posto que deseja selecionar:")
+		fmt.Scanln(&id)
+		for i := range postos {
+			if postos[i].ID == id {
+				selecionado = postos[i]
+				exibirFilaPosto(selecionado)
+				break
+			}
+		}
+
+	case opcao == 3:
+		fmt.Println("listar veiculos")
+		listarVeiculosServidor()
+
+	default:
+		fmt.Println("Opção inválida")
+	}
 }
 
 func cliente(conexao net.Conn) {
@@ -210,10 +244,6 @@ func posto(conexao net.Conn) {
 				fmt.Println("erro ao decodificar resposta")
 			}
 			postos = append(postos, postoRecebido)
-		case "cadastrar-posto":
-			testSalvarPosto(req,conexao)
-		case "postos-salvos":
-			enviarPostosSalvos(conexao)					
 
 		case "reservar-vaga-retornoPosto":
 			//envia a resposta para o veículo
@@ -241,8 +271,8 @@ func posto(conexao net.Conn) {
 				Dados:   respostaJSON,
 			}
 
-			fmt.Println("enviando a resposta do reservar vaga")
-			fmt.Println("conex clientes", conexoes_clientes)
+			// fmt.Println("enviando a resposta do reservar vaga")
+			// fmt.Println("conex clientes", conexoes_clientes)
 			enviarResposta(conexoes_clientes[0], respostaRequisicao)
 
 		case "atualizar-posicao-veiculo":
@@ -253,6 +283,8 @@ func posto(conexao net.Conn) {
 				fmt.Println("Erro ao decodificar JSON", erro)
 				return
 			}
+
+			fmt.Println("dados", dados)
 
 			resposta := modelo.RetornarAtualizarPosicaoFila{
 				Veiculo: dados.Veiculo,
@@ -270,80 +302,10 @@ func posto(conexao net.Conn) {
 				Dados:   respostaJSON,
 			}
 
-			fmt.Println("enviando a resposta do atualizar fila")
-			fmt.Println("conex clientes", conexoes_clientes[0])
+			// fmt.Println("enviando a resposta do atualizar fila")
+			// fmt.Println("conex clientes", conexoes_clientes[0])
 			enviarResposta(conexoes_clientes[0], respostaRequisicao)
 		}
-	}
-}
-
-func enviarPostosSalvos(conexao net.Conn) {
-	postosMutex.Lock()
-	defer postosMutex.Unlock()
-	
-	nomeArquivo := "postos.json"
-	//mapPosto := map[string]modelo.Posto{}
-
-	arquivo, err := os.Open(nomeArquivo)
-    if err != nil {
-		fmt.Println("erro ao abrir arquivo pra carregar os postos")
-        return
-    }
-    defer arquivo.Close()
-
-	var postosArquivo []*modelo.Posto
-	var postosExistentesArquivo []*modelo.Posto
-    decoder := json.NewDecoder(arquivo)
-    if err := decoder.Decode(&postosArquivo); err != nil {        
-		fmt.Println("erro ao decodificar JSON do arquivo dos postos")
-		return
-    }
-
-	for i := range postosArquivo {
-		posto := postosArquivo[i]
-		if posto != nil{
-			postosExistentesArquivo = append(postosExistentesArquivo, posto)
-		}
-	}
-	postosJSON, err := json.Marshal(postosExistentesArquivo)
-	if err != nil {
-		fmt.Println("erro ao codificar os postos salvos no arquivo para JSON antes de enviar para o posto")
-		return
-	}
-	req := Requisicao{
-		Comando: "postos-salvos",
-		Dados:   postosJSON,
-	}
-	//fmt.Println(postosExistentesArquivo)
-	//time.Sleep(1 * time.Second) // Espera 1 segundo para garantir que a resposta seja recebida
-	teste := enviarResposta(conexao, req)
-	if teste != nil {
-		fmt.Println("deu pau akl oh")
-	}
-}
-
-func testSalvarPosto(req Requisicao, conexao net.Conn){
-	postosMutex.Lock()
-	defer postosMutex.Unlock()
-
-	nomeArquivo := "postos.json"
-
-	var postoRecebido *modelo.Posto
-	fmt.Println("tentando decodificar")
-	erro := json.Unmarshal(req.Dados, &postoRecebido)
-	if erro != nil {
-		fmt.Println("erro ao decodificar resposta")
-	}		
-	fmt.Println("Posto recebido aki:", postoRecebido)	
-	postos = append(postos, postoRecebido)
-	salvarPostoNoArquivo(nomeArquivo)
-
-	reqi := Requisicao{
-		Comando: "cadastrou",
-	}
-	e := enviarResposta(conexao, reqi)
-	if e != nil{
-		fmt.Println("erro ao enviar resposta")
 	}
 }
 
@@ -367,66 +329,35 @@ func getQtdClientes() int {
 
 func inicializar() {
 	if !arquivoPostosCriados {
-		salvarPostoNoArquivo("postos.json")
+		salvarPostosNoArquivo()
 		arquivoPostosCriados = true
 	}
 }
 
-func salvarPostoNoArquivo(nome string) {
-	// postosMutex.Lock()
-	// defer postosMutex.Unlock()
-	//armazenarPostosNaLista()
-	nomeArquivo := nome
+func salvarPostosNoArquivo() {
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
 
-	postosExistentes := make(map[string]modelo.Posto)
-
-	// verifica se o arquivo já existe
-	if _, err := os.Stat(nomeArquivo); err == nil {
-		arquivo, err := os.Open(nomeArquivo)
-		if err != nil {
-			log.Fatalf("Erro ao abrir o arquivo: %s", err)
-		}
-		defer arquivo.Close()
-
-		var postosSalvos []modelo.Posto
-		if err := json.NewDecoder(arquivo).Decode(&postosSalvos); err != nil {
-			log.Printf("Erro ao ler JSON existente. Criando novo arquivo: %s", err)
-		}
-
-		// add a lista
-		for _, v := range postosSalvos {
-			postosExistentes[v.ID] = v
-		}
-	}
-
-	// add os novos veiculos
-	for _, v := range postos {
-		postosExistentes[v.ID] = *v
-	}
-
-	postosAtualizados := make([]modelo.Posto, 0, len(postosExistentes))
-	for _, v := range postosExistentes {
-		postosAtualizados = append(postosAtualizados, v)
-	}
-
-	postosJSON, err := json.MarshalIndent(postosAtualizados, "", "    ")
+	// converte a lista de postos para JSON
+	postosJSON, err := json.MarshalIndent(postos, "", "    ")
 	if err != nil {
 		log.Fatalf("Erro ao converter postos para JSON: %s", err)
 	}
 
-	// abre o arquivo para escrita (substitui o conteúdo antigo)
-	arquivo, err := os.Create(nomeArquivo)
+	// escreve o JSON em um arquivo
+	file, err := os.Create("postos.json")
+
 	if err != nil {
 		log.Fatalf("Erro ao criar o arquivo: %s", err)
 	}
-	defer arquivo.Close()
+	defer file.Close()
 
-	_, err = arquivo.Write(postosJSON)
+	_, err = file.Write(postosJSON)
 	if err != nil {
 		log.Fatalf("Erro ao escrever no arquivo: %s", err)
 	}
 
-	//log.Println("Veículos salvos em", nomeArquivo)
+	log.Println("Postos salvos em postos.json")
 }
 
 func salvarNoArquivo(nome string) {
@@ -486,6 +417,10 @@ func salvarNoArquivo(nome string) {
 	//log.Println("Veículos salvos em", nomeArquivo)
 }
 
+// func handler(w http.ResponseWriter, r *http.Request) {
+// 	http.ServeFile(w, r, "postos.json")
+// }
+
 func cadastrarPosto() {
 	fmt.Println("Cadastrar posto")
 	fmt.Println("Digite o ID do posto:")
@@ -506,48 +441,48 @@ func cadastrarPosto() {
 	fmt.Println("Posto cadastrado com sucesso!")
 }
 
-// func listarPostosServidor() {
-// 	for i := range postos {
-// 		posto := postos[i]
-// 		fmt.Printf("ID: %s\n", posto.ID)
-// 		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-// 		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
-// 		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
+func listarPostosServidor() {
+	for i := range postos {
+		posto := postos[i]
+		fmt.Printf("ID: %s\n", posto.ID)
+		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
+		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
+		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
+		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
+		fmt.Println("----------------------------------------")
+	}
+}
 
-// func listarVeiculosServidor() {
-// 	for i := range veiculos {
-// 		veiculo := veiculos[i]
-// 		fmt.Printf("ID: %s\n", veiculo.ID)
-// 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
+func listarVeiculosServidor() {
+	for i := range veiculos {
+		veiculo := veiculos[i]
+		fmt.Printf("ID: %s\n", veiculo.ID)
+		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+		fmt.Println("----------------------------------------")
+	}
+}
 
-// func exibirFilaPosto(posto *modelo.Posto) {
-// 	fmt.Printf("Fila do posto %s:\n", posto.ID)
-// 	for i := range posto.Fila {
-// 		veiculo := posto.Fila[i]
-// 		fmt.Printf("ID: %s\n", veiculo.ID)
-// 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-// 		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
-// 		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
-// 		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
+func exibirFilaPosto(posto *modelo.Posto) {
+	fmt.Printf("Fila do posto %s:\n", posto.ID)
+	for i := range posto.Fila {
+		veiculo := posto.Fila[i]
+		fmt.Printf("ID: %s\n", veiculo.ID)
+		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
+		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
+		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
+		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
+		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
+		fmt.Println("----------------------------------------")
+	}
+}
 
-// func atualizarFilas() {
-// 	for i := range postos {
-// 		p := postos[i]
-// 		go modelo.ArrumarPosicaoFila(p)
-// 	}
-// }
+func atualizarFilas() {
+	for i := range postos {
+		p := postos[i]
+		go modelo.ArrumarPosicaoFila(p)
+	}
+}
 
 func cadastrarVeiculo(req Requisicao) {
 	//aki tava travando o sistema
@@ -672,6 +607,8 @@ func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
 		fmt.Println("Erro ao decodificar JSON")
 		return
 	}
+
+	fmt.Println("veiculo recebido", attPos.Veiculo)
 
 	// procura o posto pelo ID
 	var conexaoPosto net.Conn
@@ -855,7 +792,6 @@ func enviarResposta(conexao net.Conn, resposta Requisicao) error {
 	}
 
 	_, erro = conexao.Write(dados)
-	//fmt.Println(dados)
 	if erro != nil {
 		log.Printf("Erro ao enviar resposta: %v", erro)
 		return erro
@@ -893,10 +829,6 @@ func receberResposta(conexao net.Conn) json.RawMessage {
 	case "adicionar-conexao":
 		return response.Dados
 	case "get-posto":
-		return response.Dados
-	case "postos-salvos":
-		return response.Dados
-	case "add-fila":
 		return response.Dados
 	}
 
