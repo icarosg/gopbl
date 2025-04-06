@@ -366,20 +366,20 @@ func atualizarPosicaoFila(r json.RawMessage) {
 	//modelo.ReservarVaga(&posto_criado, &dados.Veiculo)
 	modelo.ArrumarPosicaoFila(&posto_criado)
 
-	var veiculoDadosAtualizados modelo.Veiculo
+	var veiculoDadosAtualizados *modelo.Veiculo
 
 	fmt.Printf("\n\nFila atual do posto:\n")
 	for i := range posto_criado.Fila {
 		fmt.Printf("Posição %d: ID VEÍCULO: %s", i, posto_criado.Fila[i].ID)
 
-		if &dados.Veiculo.ID == &posto_criado.Fila[i].ID {
-			veiculoDadosAtualizados = *posto_criado.Fila[i]
+		if dados.Veiculo.ID == posto_criado.Fila[i].ID {
+			veiculoDadosAtualizados = posto_criado.Fila[i]
 		}
 	}
 
 	//envia a requisição para o servidor para enviar a resposta para o veículo
 	data := modelo.RetornarAtualizarPosicaoFila{
-		Veiculo: veiculoDadosAtualizados,
+		Veiculo: *veiculoDadosAtualizados,
 		Posto:   posto_criado,
 	}
 

@@ -47,15 +47,6 @@ var (
 	mutex                 sync.Mutex
 )
 
-var (
-	id          string
-	latitude    float64
-	longitude   float64
-	selecionado *modelo.Posto
-)
-
-var opcao int
-
 // var goroutineCriada bool
 // var ticker *time.Ticker
 
@@ -108,7 +99,7 @@ func main() {
 			go cliente(conexao)
 		}
 
-		go atualizarFilas()
+		//go atualizarFilas()
 		//go menu()
 	}
 
@@ -485,69 +476,6 @@ func salvarNoArquivo(nome string) {
 
 	//log.Println("Veículos salvos em", nomeArquivo)
 }
-
-func cadastrarPosto() {
-	fmt.Println("Cadastrar posto")
-	fmt.Println("Digite o ID do posto:")
-	fmt.Scanln(&id)
-	fmt.Println("Digite a latitude do posto:")
-	fmt.Scanln(&latitude)
-	fmt.Println("Digite a longitude do posto:")
-	fmt.Scanln(&longitude)
-
-	novoPosto := modelo.NovoPosto(id, latitude, longitude)
-
-	postosMutex.Lock()
-	postos = append(postos, &novoPosto)
-	postosMutex.Unlock()
-
-	salvarPostosNoArquivo()
-
-	fmt.Println("Posto cadastrado com sucesso!")
-}
-
-// func listarPostosServidor() {
-// 	for i := range postos {
-// 		posto := postos[i]
-// 		fmt.Printf("ID: %s\n", posto.ID)
-// 		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-// 		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
-// 		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
-
-// func listarVeiculosServidor() {
-// 	for i := range veiculos {
-// 		veiculo := veiculos[i]
-// 		fmt.Printf("ID: %s\n", veiculo.ID)
-// 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
-
-// func exibirFilaPosto(posto *modelo.Posto) {
-// 	fmt.Printf("Fila do posto %s:\n", posto.ID)
-// 	for i := range posto.Fila {
-// 		veiculo := posto.Fila[i]
-// 		fmt.Printf("ID: %s\n", veiculo.ID)
-// 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-// 		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
-// 		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
-// 		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
-
-// func atualizarFilas() {
-// 	for i := range postos {
-// 		p := postos[i]
-// 		go modelo.ArrumarPosicaoFila(p)
-// 	}
-// }
 
 func cadastrarVeiculo(req Requisicao) {
 	//aki tava travando o sistema

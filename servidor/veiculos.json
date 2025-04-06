@@ -7,5 +7,23 @@
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
         "Pagamentos": null
+    },
+    {
+        "ID": "testeBBB",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "dfgh",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
     }
 ]

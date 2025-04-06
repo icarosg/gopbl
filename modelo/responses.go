@@ -17,7 +17,7 @@ type ReservarVagaJson struct {
 }
 
 type RetornarVagaJson struct {
-	Posto Posto `json:"id_veiculo"`
+	Posto Posto `json:"id_posto"`
 }
 
 type AtualizarPosicaoNaFila struct {
