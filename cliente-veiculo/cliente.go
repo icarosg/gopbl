@@ -157,6 +157,8 @@ func selecionarObjetivo() {
 			fmt.Println("Você ainda não possui um veículo.")
 		}
 
+		opcao = -1
+
 		fmt.Printf("Digite 0 para cadastrar seu veículo\n")
 		fmt.Printf("Digite 1 para listar os veículos e importar algum\n")
 		fmt.Print("Digite 2 para encontrar posto recomendado\n")
@@ -507,7 +509,7 @@ func atualizarPosicaoVeiculoNaFila() {
 		posto_selecionado = &dados.Posto
 
 		if !veiculo.IsDeslocandoAoPosto {
-			fmt.Printf("Posto %s: Veículo %s removido da fila e logo finalizará o seu carregamento\n", posto_selecionado.ID, veiculo.ID)
+			fmt.Printf("Posto %s: Veículo %s removido da fila, finalizou o seu carregamento e voltou ao seu deslocamento normal\n", posto_selecionado.ID, veiculo.ID)
 		}
 	} else {
 		fmt.Printf("\n\nO posto foi desconectado! O veículo não está mais se deslocando para lá!\n\n")

@@ -163,6 +163,8 @@ func selecionarObjetivo() {
 		fmt.Printf("Digite 0 para cadastrar seu posto\n")
 		fmt.Printf("Digite 1 para listar os postos e importar algum\n")
 
+		opcao = -1
+
 		fmt.Scanln(&opcao)
 		switch {
 		case opcao == 0:
@@ -206,7 +208,7 @@ func reservarVaga(r json.RawMessage) {
 
 	//envia a requisição para o servidor para enviar a resposta para o veículo
 	veiculoConexao := modelo.RetornarVagaJson{
-		Posto: posto_criado,
+		Posto:      posto_criado,
 		ID_veiculo: dados.Veiculo.ID,
 	}
 
