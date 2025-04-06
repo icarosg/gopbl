@@ -599,25 +599,31 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 
 	if conexaoPosto == nil {
 		fmt.Println("Posto não encontrado")
+		res := Requisicao{
+			Comando: "reservar-vaga",
+			Dados:   nil,
+		}
+
+		enviarResposta(conexao, res)
 		return
-	}
+	} else {
+		veiculoConexao := modelo.ReservarVagaJson{
+			Veiculo: pagamentoJson.Veiculo,
+		}
 
-	veiculoConexao := modelo.ReservarVagaJson{
-		Veiculo: pagamentoJson.Veiculo,
-	}
+		req, err := json.Marshal(veiculoConexao)
+		if err != nil {
+			fmt.Printf("Erro ao converter veículo e conexão para JSON: %v\n", err)
+			return
+		}
 
-	req, err := json.Marshal(veiculoConexao)
-	if err != nil {
-		fmt.Printf("Erro ao converter veículo e conexão para JSON: %v\n", err)
-		return
-	}
+		res := Requisicao{
+			Comando: "reservar-vaga",
+			Dados:   req,
+		}
 
-	res := Requisicao{
-		Comando: "reservar-vaga",
-		Dados:   req,
+		enviarResposta(conexaoPosto, res)
 	}
-
-	enviarResposta(conexaoPosto, res)
 }
 
 func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
@@ -642,11 +648,6 @@ func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
 		}
 	}
 
-	if conexaoPosto == nil {
-		fmt.Println("Posto não encontrado")
-		return
-	}
-
 	veiculoConexao := modelo.ReservarVagaJson{
 		Veiculo: attPos.Veiculo,
 	}
@@ -657,29 +658,22 @@ func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
 		return
 	}
 
-	// reservado := modelo.ReservarVaga(posto, veiculo)
-	// if reservado {
-	// 	fmt.Printf("(DESLOCANDO AO POSTO) Posição do veículo %s atualizado para a latitude e longitude: %v, %v\n", veiculo.ID, veiculo.Latitude, veiculo.Longitude)
-	// } else {
-	// 	fmt.Printf("ALGUM PROBLEMA DEU")
-	// }
-	// resposta := modelo.RecomendadoResponse{
-	// 	ID_posto:        posto.ID,
-	// 	Latitude:        posto.Latitude,
-	// 	Longitude:       posto.Longitude,
-	// 	Posicao_na_fila: modelo.GetPosFila(*veiculo, posto),
-	// }
+	if conexaoPosto == nil {
+		fmt.Println("Posto não encontrado")
 
-	// respostaJSON, err := json.Marshal(resposta)
-	// if err != nil {
-	// 	fmt.Println("Erro ao codificar resposta")
-	// 	return
-	// }
-	respostaRequisicao := Requisicao{
-		Comando: "atualizar-posicao-veiculo",
-		Dados:   req,
+		respostaRequisicao := Requisicao{
+			Comando: "atualizar-posicao-veiculo",
+			Dados:   req,
+		}
+		enviarResposta(conexao, respostaRequisicao)
+		return
+	} else {
+		respostaRequisicao := Requisicao{
+			Comando: "atualizar-posicao-veiculo",
+			Dados:   req,
+		}
+		enviarResposta(conexaoPosto, respostaRequisicao)
 	}
-	enviarResposta(conexaoPosto, respostaRequisicao)
 }
 
 func postoRecomendado(conexao net.Conn, req Requisicao) {
@@ -719,29 +713,33 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 	if postoRecomendado != nil {
 		fmt.Printf("Posto recomendado: %s\n", postoRecomendado.ID)
 		fmt.Printf("Posição na fila: %d\n", posicaoFila)
+		recomendadoResponse := modelo.RecomendadoResponse{
+			ID_posto:  postoRecomendado.ID,
+			Latitude:  postoRecomendado.Latitude,
+			Longitude: postoRecomendado.Longitude,
+			//Posicao_na_fila: posicaoFila,
+		}
+
+		respostaJSON, err := json.Marshal(recomendadoResponse)
+		if err != nil {
+			fmt.Println("Erro ao codificar posto recomendado")
+			return
+		}
+		response := Requisicao{
+			Comando: "encontrar-posto-recomendado",
+			Dados:   respostaJSON,
+		}
+
+		enviarResposta(conexao, response)
 	} else {
 		fmt.Println("Nenhum posto recomendado encontrado")
+		response := Requisicao{
+			Comando: "encontrar-posto-recomendado",
+		}
+
+		enviarResposta(conexao, response)
 	}
 
-	recomendadoResponse := modelo.RecomendadoResponse{
-		ID_posto:  postoRecomendado.ID,
-		Latitude:  postoRecomendado.Latitude,
-		Longitude: postoRecomendado.Longitude,
-		//Posicao_na_fila: posicaoFila,
-	}
-
-	respostaJSON, err := json.Marshal(recomendadoResponse)
-	if err != nil {
-		fmt.Println("Erro ao codificar posto recomendado")
-		return
-	}
-
-	response := Requisicao{
-		Comando: "encontrar-posto-recomendado",
-		Dados:   respostaJSON,
-	}
-
-	enviarResposta(conexao, response)
 }
 
 func tipoDeCliente(conexao net.Conn) string {

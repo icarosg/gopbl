@@ -1,1 +1,26 @@
-null
+[
+    {
+        "ID": "",
+        "Latitude": 0,
+        "Longitude": 0,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "",
+        "Latitude": 0,
+        "Longitude": 0,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "",
+        "Latitude": 0,
+        "Longitude": 0,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    }
+]

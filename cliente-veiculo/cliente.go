@@ -94,7 +94,6 @@ func receberResposta() json.RawMessage {
 	case "listar-veiculos":
 		return response.Dados
 	case "new-vaga":
-		// fmt.Println("passou por cá")
 		return response.Dados
 	case "atualizar-posicao-veiculo":
 		return response.Dados
@@ -443,24 +442,24 @@ func reservarVaga() {
 
 	resp := receberResposta()
 	if resp == nil {
-		fmt.Println("Erro ao listar postos")
+		fmt.Println("ID do posto não encontrado! Não foi possível reservar a vaga")
 		return
+	} else {
+		//to convertendo o JSON para um slice de postos
+		var vagaFeita RecomendadoResponse
+		erro = json.Unmarshal(resp, &vagaFeita)
+		if erro != nil {
+			fmt.Println("Erro ao converter JSON da resposta:", erro)
+			return
+		}
+
+		veiculo.IsDeslocandoAoPosto = true //ao reservar, automaticamente o veículo começa se deslocar para o posto
+
+		fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
+		fmt.Println("latitude: ", vagaFeita.Latitude)
+		fmt.Println("longitude: ", vagaFeita.Longitude)
+		// fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
 	}
-
-	//to convertendo o JSON para um slice de postos
-	var vagaFeita RecomendadoResponse
-	erro = json.Unmarshal(resp, &vagaFeita)
-	if erro != nil {
-		fmt.Println("Erro ao converter JSON da resposta:", erro)
-		return
-	}
-
-	veiculo.IsDeslocandoAoPosto = true //ao reservar, automaticamente o veículo começa se deslocar para o posto
-
-	fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
-	fmt.Println("latitude: ", vagaFeita.Latitude)
-	fmt.Println("longitude: ", vagaFeita.Longitude)
-	// fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
 }
 
 func atualizarPosicaoVeiculoNaFila() {
@@ -500,14 +499,22 @@ func atualizarPosicaoVeiculoNaFila() {
 		return
 	}
 
-	fmt.Printf("\n\nveiculo recebido: %f %f %t\n\n", dados.Veiculo.Latitude, dados.Veiculo.Longitude, dados.Veiculo.IsDeslocandoAoPosto)
-	//fmt.Println("postorecebido:", &dados.Posto)
+	if dados.Posto.ID != "" {
+		fmt.Printf("\n\nveiculo recebido: %f %f\n\n", dados.Veiculo.Latitude, dados.Veiculo.Longitude)
+		//fmt.Println("postorecebido:", &dados.Posto)
 
-	veiculo = dados.Veiculo
-	posto_selecionado = &dados.Posto
+		veiculo = dados.Veiculo
+		posto_selecionado = &dados.Posto
 
-	if !veiculo.IsDeslocandoAoPosto {
-		fmt.Printf("Posto %s: Veículo %s removido da fila e finalizado o seu carregamento\n", posto_selecionado.ID, veiculo.ID)
+		if !veiculo.IsDeslocandoAoPosto {
+			fmt.Printf("Posto %s: Veículo %s removido da fila e logo finalizará o seu carregamento\n", posto_selecionado.ID, veiculo.ID)
+		}
+	} else {
+		fmt.Printf("\n\nO posto foi desconectado! O veículo não está mais se deslocando para lá!\n\n")
+
+		veiculo = dados.Veiculo
+		veiculo.IsDeslocandoAoPosto = false
+		veiculo.IsCarregando = false
 	}
 
 }
