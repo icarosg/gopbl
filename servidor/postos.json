@@ -1,1 +1,18 @@
-null
+[
+    {
+        "ID": "new",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "novo",
+        "Latitude": 30,
+        "Longitude": 30,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    }
+]

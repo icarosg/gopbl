@@ -26,6 +26,7 @@ var posto_criado modelo.Posto
 var conexao net.Conn
 var mutex sync.Mutex
 var buffer = make([]byte, 4096)
+var importandoVeiculo bool = false
 
 func main() {
 	var erro error
@@ -38,7 +39,7 @@ func main() {
 	defer conexao.Close()
 
 	fmt.Println("posto conectado à porta:", conexao.RemoteAddr())
-	posto_criado = modelo.NovoPosto("teste", 10, 10)
+	// posto_criado = modelo.NovoPosto("teste", 10, 10)
 
 	selecionarObjetivo()
 	// 	go verificarAlgoNoBuffer()
@@ -51,9 +52,9 @@ func enviarRequisicao(req Requisicao) error {
 		return erro
 	}
 
-	mutex.Lock()
+	// mutex.Lock()
 	_, erro = conexao.Write(dados)
-	mutex.Unlock()
+	// mutex.Unlock()
 
 	if erro != nil {
 		fmt.Println("Erro ao enviar a requisição")
@@ -89,6 +90,8 @@ func receberResposta() *Requisicao {
 	case "reservar-vaga":
 		return &response
 	case "atualizar-posicao-veiculo":
+		return &response
+	case "listar-postosNoArquivo":
 		return &response
 	}
 
@@ -146,10 +149,18 @@ func verificarAlgoNoBuffer() {
 
 				case "atualizar-posicao-veiculo":
 					atualizarPosicaoFila(resposta.Dados)
+
+				case "listar-postosNoArquivo":
+					listarEImportarPostoResposta(resposta.Dados)
 				}
 
 			} else {
 				fmt.Println("Você ainda não possui um posto.")
+
+				switch resposta.Comando {
+				case "listar-postosNoArquivo":
+					listarEImportarPostoResposta(resposta.Dados)
+				}
 			}
 		}
 	}
@@ -160,23 +171,26 @@ func selecionarObjetivo() {
 	go verificarAlgoNoBuffer()
 
 	for {
-		fmt.Printf("Digite 0 para cadastrar seu posto\n")
-		fmt.Printf("Digite 1 para listar os postos e importar algum\n")
+		if !importandoVeiculo {
+			fmt.Printf("Digite 0 para cadastrar seu posto\n")
+			fmt.Printf("Digite 1 para listar os postos e importar algum\n")
 
-		opcao = -1
+			opcao = -1
 
-		fmt.Scanln(&opcao)
-		switch {
-		case opcao == 0:
-			fmt.Println("Cadastrar posto")
-			cadastrarPosto()
+			fmt.Scanln(&opcao)
+			switch {
+			case opcao == 0:
+				fmt.Println("Cadastrar posto")
+				cadastrarPosto()
 
-		case opcao == 1:
-			fmt.Println("Listar e importar posto")
-			//listarEImportarVeiculo()
+			case opcao == 1:
+				fmt.Println("Listar e importar posto")
+				listarEImportarPostoRequisicao()
+				importandoVeiculo = true
 
-		default:
-			fmt.Println("Opção inválida")
+			default:
+				fmt.Println("Opção inválida")
+			}
 		}
 	}
 }
@@ -192,7 +206,22 @@ func cadastrarPosto() {
 	posto_criado = modelo.NovoPosto(id, longitude, latitude)
 	// posto_criado = &posto
 
-	fmt.Println("Posto cadastrado com sucesso")
+	postoJSON, erro := json.Marshal(posto_criado)
+	if erro != nil {
+		fmt.Printf("Erro ao converter posto para JSON: %v\n", erro)
+		return
+	}
+
+	req := Requisicao{
+		Comando: "cadastrar-posto",
+		Dados:   postoJSON,
+	}
+
+	erro = enviarRequisicao(req)
+
+	if erro == nil {
+		fmt.Println("Posto cadastrado com sucesso")
+	}
 }
 
 func reservarVaga(r json.RawMessage) {
@@ -277,4 +306,74 @@ func atualizarPosicaoFila(r json.RawMessage) {
 		Dados:   req,
 	}
 	enviarRequisicao(res)
+}
+
+func listarEImportarPostoRequisicao() {
+	req := Requisicao{
+		Comando: "listarPostosDoArquivo",
+	}
+
+	enviarRequisicao(req)
+}
+
+func listarEImportarPostoResposta(r json.RawMessage) {
+	//to convertendo o JSON para um slice de veiculos
+	var postos []modelo.Posto
+	erro := json.Unmarshal(r, &postos)
+	if erro != nil {
+		fmt.Println("Erro ao converter JSON:", erro)
+		return
+	}
+
+	for i := range postos {
+		posto := &postos[i]
+		fmt.Printf("ID: %s\n", posto.ID)
+		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
+		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
+		fmt.Println("----------------------------------------")
+	}
+
+	fmt.Println("Digite o ID do posto que deseja importar: ")
+	var novoID string
+	fmt.Scanln(&novoID)
+
+	importandoVeiculo = false
+	var postoEncontrado bool = false
+	var posto_selecionado *modelo.Posto
+
+	for i := range postos {
+		p := &postos[i]
+		fmt.Println("test", novoID)
+
+		if p.ID == novoID {
+			postoEncontrado = true
+			posto_selecionado = p
+			break
+		}
+	}
+	if !postoEncontrado {
+		fmt.Println("Posto não encontrado")
+		return
+
+	} else {
+		postoImportado := *posto_selecionado
+		posto_criado = modelo.NovoPosto(postoImportado.ID, postoImportado.Latitude, postoImportado.Latitude)
+
+		postoJSON, erro := json.Marshal(posto_criado)
+		if erro != nil {
+			fmt.Printf("Erro ao converter posto para JSON: %v\n", erro)
+			return
+		}
+
+		req := Requisicao{
+			Comando: "cadastrar-posto",
+			Dados:   postoJSON,
+		}
+
+		erro = enviarRequisicao(req)
+
+		if erro == nil {
+			fmt.Println("Posto importado com sucesso!")
+		}
+	}
 }

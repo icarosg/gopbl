@@ -1,26 +1,8 @@
 [
     {
-        "ID": "novo",
-        "Latitude": 30,
-        "Longitude": 20,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
         "ID": "test",
         "Latitude": 50,
         "Longitude": 50,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "asdasd",
-        "Latitude": 10,
-        "Longitude": 10,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
@@ -36,79 +18,7 @@
         "Pagamentos": null
     },
     {
-        "ID": "ajsdh",
-        "Latitude": 10,
-        "Longitude": 10,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "60",
-        "Latitude": 70,
-        "Longitude": 70,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "poaushfsj",
-        "Latitude": 49,
-        "Longitude": 49,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "",
-        "Latitude": 0,
-        "Longitude": 0,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "neww",
-        "Latitude": 10,
-        "Longitude": 10,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "wiej",
-        "Latitude": 0,
-        "Longitude": 10,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
         "ID": "40",
-        "Latitude": 40,
-        "Longitude": 40,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "kkkkk",
-        "Latitude": 50,
-        "Longitude": 50,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "ujasdhj",
         "Latitude": 40,
         "Longitude": 40,
         "Bateria": 100,
@@ -135,34 +45,7 @@
         "Pagamentos": null
     },
     {
-        "ID": "asd",
-        "Latitude": 30,
-        "Longitude": 30,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "10",
-        "Latitude": 0,
-        "Longitude": 10,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
         "ID": "asdhuas",
-        "Latitude": 30,
-        "Longitude": 30,
-        "Bateria": 100,
-        "IsCarregando": false,
-        "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },
-    {
-        "ID": "asdas",
         "Latitude": 30,
         "Longitude": 30,
         "Bateria": 100,
@@ -180,17 +63,53 @@
         "Pagamentos": null
     },
     {
-        "ID": "90",
-        "Latitude": 0,
-        "Longitude": 90,
+        "ID": "opaa",
+        "Latitude": 10,
+        "Longitude": 10,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
         "Pagamentos": null
     },
     {
-        "ID": "ne",
-        "Latitude": 90,
+        "ID": "poaushfsj",
+        "Latitude": 49,
+        "Longitude": 49,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "neww",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "wiej",
+        "Latitude": 0,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "asd",
+        "Latitude": 30,
+        "Longitude": 30,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "90",
+        "Latitude": 0,
         "Longitude": 90,
         "Bateria": 100,
         "IsCarregando": false,
@@ -216,18 +135,45 @@
         "Pagamentos": null
     },
     {
-        "ID": "443",
-        "Latitude": 30,
-        "Longitude": 30,
+        "ID": "ajsdh",
+        "Latitude": 10,
+        "Longitude": 10,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
         "Pagamentos": null
     },
     {
-        "ID": "opaa",
-        "Latitude": 10,
+        "ID": "60",
+        "Latitude": 70,
+        "Longitude": 70,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "ujasdhj",
+        "Latitude": 40,
+        "Longitude": 40,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "10",
+        "Latitude": 0,
         "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "asdas",
+        "Latitude": 30,
+        "Longitude": 30,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
@@ -237,6 +183,69 @@
         "ID": "120",
         "Latitude": 120,
         "Longitude": 120,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "novo",
+        "Latitude": 30,
+        "Longitude": 20,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "asdasd",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "",
+        "Latitude": 0,
+        "Longitude": 0,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "kkkkk",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "ne",
+        "Latitude": 90,
+        "Longitude": 90,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "443",
+        "Latitude": 30,
+        "Longitude": 30,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "kkk",
+        "Latitude": 50,
+        "Longitude": 50,
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
