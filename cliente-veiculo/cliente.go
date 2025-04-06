@@ -270,8 +270,26 @@ func listarEImportarVeiculo() []modelo.Veiculo {
 		fmt.Println("Veículo não encontrado")
 		return nil
 	} else {
-		veiculo = *veiculo_selecionado
-		fmt.Println("Veículo importado com sucesso!")
+		veiculoImportado := *veiculo_selecionado
+		veiculo = modelo.NovoVeiculo(veiculoImportado.ID, veiculoImportado.Latitude, veiculoImportado.Latitude)
+		veiculo.Bateria = veiculoImportado.Bateria
+
+		veiculoJSON, erro := json.Marshal(veiculo)
+		if erro != nil {
+			fmt.Printf("Erro ao converter veículo para JSON: %v\n", erro)
+			return nil
+		}
+
+		req := Requisicao{
+			Comando: "cadastrar-veiculo",
+			Dados:   veiculoJSON,
+		}
+
+		erro = enviarRequisicao(req)
+
+		if erro == nil {
+			fmt.Println("Veículo importado com sucesso!")
+		}
 	}
 
 	return veiculos
@@ -446,8 +464,6 @@ func reservarVaga() {
 }
 
 func atualizarPosicaoVeiculoNaFila() {
-	fmt.Println("vei", veiculo)
-
 	attPosicao := modelo.AtualizarPosicaoNaFila{
 		Veiculo:  veiculo,
 		ID_posto: posto_selecionado.ID,
@@ -484,8 +500,8 @@ func atualizarPosicaoVeiculoNaFila() {
 		return
 	}
 
-	fmt.Printf("\n\n\n\nveiculo recebido: %f %f %t", dados.Veiculo.Latitude, dados.Veiculo.Longitude, dados.Veiculo.IsDeslocandoAoPosto)
-	fmt.Println("postorecebido:", &dados.Posto)
+	fmt.Printf("\n\nveiculo recebido: %f %f %t\n\n", dados.Veiculo.Latitude, dados.Veiculo.Longitude, dados.Veiculo.IsDeslocandoAoPosto)
+	//fmt.Println("postorecebido:", &dados.Posto)
 
 	veiculo = dados.Veiculo
 	posto_selecionado = &dados.Posto

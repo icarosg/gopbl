@@ -201,12 +201,13 @@ func reservarVaga(r json.RawMessage) {
 		return
 	}
 
-	fmt.Println("dados do veículo", dados.Veiculo)
+	//fmt.Println("dados do veículo", dados.Veiculo)
 	modelo.ReservarVaga(&posto_criado, &dados.Veiculo)
 
 	//envia a requisição para o servidor para enviar a resposta para o veículo
 	veiculoConexao := modelo.RetornarVagaJson{
 		Posto: posto_criado,
+		ID_veiculo: dados.Veiculo.ID,
 	}
 
 	req, err := json.Marshal(veiculoConexao)
@@ -243,7 +244,7 @@ func atualizarPosicaoFila(r json.RawMessage) {
 			veiculoEncontrado = i
 		}
 
-		fmt.Printf("Posição %d: ID VEÍCULO: %s LONGITUDE E LATITUDE: %f %f %t", i, posto_criado.Fila[i].ID, posto_criado.Fila[i].Longitude, posto_criado.Fila[i].Latitude, posto_criado.Fila[i].IsDeslocandoAoPosto)
+		fmt.Printf("Posição %d: ID VEÍCULO: %s LONGITUDE E LATITUDE: %f %f\n\n", i, posto_criado.Fila[i].ID, posto_criado.Fila[i].Longitude, posto_criado.Fila[i].Latitude)
 	}
 
 	if veiculoEncontrado != -1 {

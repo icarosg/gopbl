@@ -34,11 +34,12 @@ type Requisicao struct {
 }
 
 var (
-	postosMutex       sync.Mutex
-	postos            []*modelo.Posto // Slice para armazenar todos os postos
-	veiculos          []*modelo.Veiculo
-	conexoes_postos   []net.Conn
-	conexoes_clientes []net.Conn
+	postosMutex                sync.Mutex
+	postos                     []*modelo.Posto // Slice para armazenar todos os postos
+	veiculos                   []*modelo.Veiculo
+	conexoes_postos            []net.Conn
+	conexoes_clientes          []net.Conn
+	dicionarioConexoesClientes = make(map[string]net.Conn)
 	//pagamentos  []PagamentoJson
 )
 
@@ -183,7 +184,7 @@ func cliente(conexao net.Conn) {
 
 		switch req.Comando {
 		case "cadastrar-veiculo":
-			cadastrarVeiculo(req)
+			cadastrarVeiculo(req, conexao)
 
 		case "listar-veiculos":
 			listarVeiculos(conexao)
@@ -273,7 +274,8 @@ func posto(conexao net.Conn) {
 
 			// fmt.Println("enviando a resposta do reservar vaga")
 			// fmt.Println("conex clientes", conexoes_clientes)
-			enviarResposta(conexoes_clientes[0], respostaRequisicao)
+			// enviarResposta(conexoes_clientes[0], respostaRequisicao)
+			enviarResposta(dicionarioConexoesClientes[dados.ID_veiculo], respostaRequisicao)
 
 		case "atualizar-posicao-veiculo":
 			//envia a resposta para o veículo
@@ -284,7 +286,7 @@ func posto(conexao net.Conn) {
 				return
 			}
 
-			fmt.Println("dados", dados)
+			//fmt.Println("dados", dados)
 
 			resposta := modelo.RetornarAtualizarPosicaoFila{
 				Veiculo: dados.Veiculo,
@@ -304,7 +306,8 @@ func posto(conexao net.Conn) {
 
 			// fmt.Println("enviando a resposta do atualizar fila")
 			// fmt.Println("conex clientes", conexoes_clientes[0])
-			enviarResposta(conexoes_clientes[0], respostaRequisicao)
+			// enviarResposta(conexoes_clientes[0], respostaRequisicao)
+			enviarResposta(dicionarioConexoesClientes[dados.Veiculo.ID], respostaRequisicao)
 		}
 	}
 }
@@ -484,7 +487,7 @@ func atualizarFilas() {
 	}
 }
 
-func cadastrarVeiculo(req Requisicao) {
+func cadastrarVeiculo(req Requisicao, conexao net.Conn) {
 	//aki tava travando o sistema
 	// postosMutex.Lock()
 	// defer postosMutex.Unlock()
@@ -498,6 +501,7 @@ func cadastrarVeiculo(req Requisicao) {
 		return
 	}
 
+	dicionarioConexoesClientes[veiculo.ID] = conexao
 	veiculos = append(veiculos, &veiculo)
 
 	salvarNoArquivo("veiculos.json")
@@ -701,9 +705,9 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 	}
 
 	recomendadoResponse := modelo.RecomendadoResponse{
-		ID_posto:        postoRecomendado.ID,
-		Latitude:        postoRecomendado.Latitude,
-		Longitude:       postoRecomendado.Longitude,
+		ID_posto:  postoRecomendado.ID,
+		Latitude:  postoRecomendado.Latitude,
+		Longitude: postoRecomendado.Longitude,
 		//Posicao_na_fila: posicaoFila,
 	}
 
