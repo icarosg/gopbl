@@ -4,21 +4,38 @@ services:
       context: .
       dockerfile: servidor.Dockerfile
     ports:
-      - "8080:8080"
+      - "9090:9090"
     networks:
       - app-network
     volumes:
-      - ./modelo:/app/modelo
+      - ./servidor/postos.json:/app/postos.json
+      - ./servidor/veiculos.json:/app/veiculos.json
     restart: unless-stopped
 
-  cliente:
+  cliente-posto:
     stdin_open: true
     tty: true
     build:
       context: .
-      dockerfile: cliente.Dockerfile
+      dockerfile: cliente-posto.Dockerfile
     ports:
       - "8081:8081"
+    networks:
+      - app-network
+    depends_on:
+      - servidor
+    volumes:
+      - ./modelo:/app/modelo
+    restart: unless-stopped
+
+  cliente-veiculo:
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: cliente-veiculo.Dockerfile
+    ports:
+      - "8082:8082"
     networks:
       - app-network
     depends_on:

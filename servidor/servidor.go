@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"net"
+
 	//"net/http"
 	"os"
 	"sync"
@@ -64,8 +65,18 @@ var (
 // var arquivoPostosCriados bool = false
 
 func main() {
-	// cria um listener TCP na porta 8080
-	listener, erro := net.Listen("tcp", "localhost:8080")
+	// http.HandleFunc("/posto", handler)
+	// http.HandleFunc("/listar", listarPostos)
+	// http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
+	// http.HandleFunc("/posto-recomendado", postoRecomendado)
+	// http.HandleFunc("/reservar-vaga", reservarVagaPosto)
+	// http.HandleFunc("/pagamento", reservarVagaPosto)
+
+	// cria um listener TCP na porta 9090, ouvindo em todas as interfaces
+
+	// listener, erro := net.Listen("tcp", "localhost:8080")
+
+	listener, erro := net.Listen("tcp", "0.0.0.0:9090")
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
 		os.Exit(1)
@@ -109,46 +120,9 @@ func main() {
 			conexoes_clientes = append(conexoes_clientes, conexao)
 			go cliente(conexao)
 		}
-
-		// go atualizarFilas()
-		//go menu()
 	}
 
 }
-
-// func menu() {
-// 	fmt.Printf("Digite 0 para cadastrar um posto\n")
-// 	fmt.Printf("Digite 1 para listar os postos\n")
-// 	fmt.Printf("Digite 2 para selecionar um posto e exibir a fila de veiculos\n")
-// 	fmt.Printf("Digite 3 para listar os veiculos\n")
-// 	fmt.Scanln(&opcao)
-// 	switch {
-// 	case opcao == 0:
-// 		fmt.Println("Cadastrar posto")
-// 		//cadastrarPosto()
-// 	case opcao == 1:
-// 		fmt.Println("Listar postos")
-// 		listarPostosServidor()
-
-// 	case opcao == 2:
-// 		fmt.Println("Digite o id do posto que deseja selecionar:")
-// 		fmt.Scanln(&id)
-// 		for i := range postos {
-// 			if postos[i].ID == id {
-// 				selecionado = postos[i]
-// 				exibirFilaPosto(selecionado)
-// 				break
-// 			}
-// 		}
-
-// 	case opcao == 3:
-// 		fmt.Println("listar veiculos")
-// 		listarVeiculosServidor()
-
-// 	default:
-// 		fmt.Println("Opção inválida")
-// 	}
-// }
 
 func cliente(conexao net.Conn) {
 	defer func() {
@@ -357,39 +331,6 @@ func getQtdClientes() int {
 	return qtdClientesConectados
 }
 
-// func inicializar() {
-// 	if !arquivoPostosCriados {
-// 		salvarPostosNoArquivo()
-// 		arquivoPostosCriados = true
-// 	}
-// }
-
-// func salvarPostosNoArquivo() {
-// 	postosMutex.Lock()
-// 	defer postosMutex.Unlock()
-
-// 	// converte a lista de postos para JSON
-// 	postosJSON, err := json.MarshalIndent(postos, "", "    ")
-// 	if err != nil {
-// 		log.Fatalf("Erro ao converter postos para JSON: %s", err)
-// 	}
-
-// 	// escreve o JSON em um arquivo
-// 	file, err := os.Create("postos.json")
-
-// 	if err != nil {
-// 		log.Fatalf("Erro ao criar o arquivo: %s", err)
-// 	}
-// 	defer file.Close()
-
-// 	_, err = file.Write(postosJSON)
-// 	if err != nil {
-// 		log.Fatalf("Erro ao escrever no arquivo: %s", err)
-// 	}
-
-// 	log.Println("Postos salvos em postos.json")
-// }
-
 func salvarNoArquivo(nome string) {
 	postosMutex.Lock()
 	defer postosMutex.Unlock()
@@ -504,58 +445,7 @@ func postoNoArquivo(nome string) {
 	//log.Println("Veículos salvos em", nomeArquivo)
 }
 
-// func handler(w http.ResponseWriter, r *http.Request) {
-// 	http.ServeFile(w, r, "postos.json")
-// }
-
-// func listarPostosServidor() {
-// 	for i := range postos {
-// 		posto := postos[i]
-// 		fmt.Printf("ID: %s\n", posto.ID)
-// 		fmt.Printf("Latitude: %.2f\n", posto.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", posto.Longitude)
-// 		fmt.Printf("Quantidade de carros na fila: %d\n", len(posto.Fila))
-// 		fmt.Printf("Bomba disponivel : %t\n", posto.BombaOcupada)
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
-
-// func listarVeiculosServidor() {
-// 	for i := range veiculos {
-// 		veiculo := veiculos[i]
-// 		fmt.Printf("ID: %s\n", veiculo.ID)
-// 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
-
-// func exibirFilaPosto(posto *modelo.Posto) {
-// 	fmt.Printf("Fila do posto %s:\n", posto.ID)
-// 	for i := range posto.Fila {
-// 		veiculo := posto.Fila[i]
-// 		fmt.Printf("ID: %s\n", veiculo.ID)
-// 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
-// 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
-// 		tempoEstimado, _ := modelo.TempoEstimado(posto, 0)
-// 		fmt.Printf("Tempo estimado para o carregamento desse veiculo: %s\n", tempoEstimado)
-// 		fmt.Printf("Posição na fila: %d\n", modelo.GetPosFila(*veiculo, posto))
-// 		fmt.Println("----------------------------------------")
-// 	}
-// }
-
-// func atualizarFilas() {
-// 	for i := range postos {
-// 		p := postos[i]
-// 		go modelo.ArrumarPosicaoFila(p)
-// 	}
-// }
-
 func cadastrarVeiculo(req Requisicao, conexao net.Conn) {
-	//aki tava travando o sistema
-	// postosMutex.Lock()
-	// defer postosMutex.Unlock()
-
 	// decodifica o JSON do body da req
 	var veiculo modelo.Veiculo
 	erro := json.Unmarshal(req.Dados, &veiculo)
@@ -898,10 +788,6 @@ func listarPostos(conexao net.Conn) {
 }
 
 func cadastrarPosto(req Requisicao) {
-	//aki tava travando o sistema
-	// postosMutex.Lock()
-	// defer postosMutex.Unlock()
-
 	// decodifica o JSON do body da req
 	var posto modelo.Posto
 	erro := json.Unmarshal(req.Dados, &posto)

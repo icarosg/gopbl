@@ -41,7 +41,10 @@ var conexao net.Conn
 
 func main() {
 	var erro error
-	conexao, erro = net.Dial("tcp", "localhost:8080")
+	// conexao, erro = net.Dial("tcp", "localhost:8080")
+	
+	// em ambiente Docker, usar o nome do serviço em vez de localhost
+	conexao, erro = net.Dial("tcp", "servidor:9090")
 	if erro != nil {
 		fmt.Println("Erro ao conectar ao servidor:", erro)
 		return
