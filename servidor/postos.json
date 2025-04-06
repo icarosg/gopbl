@@ -1,1 +1,58 @@
-null
+[
+    {
+        "ID": "jkl",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "last",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "ondas",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": true
+    },
+    {
+        "ID": "Posto_do_mudinho",
+        "Latitude": 15,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "guilherme",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "alou",
+        "Latitude": 15,
+        "Longitude": 15,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "bct",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": true
+    }
+]
