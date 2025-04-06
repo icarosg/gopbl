@@ -502,14 +502,15 @@ func atualizarPosicaoVeiculoNaFila() {
 	}
 
 	if dados.Posto.ID != "" {
-		fmt.Printf("\n\nveiculo recebido: %f %f\n\n", dados.Veiculo.Latitude, dados.Veiculo.Longitude)
+		fmt.Printf("\n\nveiculo recebido: %f %f\n\n", dados.Veiculo.Longitude, dados.Veiculo.Latitude)
 		//fmt.Println("postorecebido:", &dados.Posto)
 
 		veiculo = dados.Veiculo
 		posto_selecionado = &dados.Posto
 
 		if !veiculo.IsDeslocandoAoPosto {
-			fmt.Printf("Posto %s: Veículo %s removido da fila, finalizou o seu carregamento e voltou ao seu deslocamento normal\n", posto_selecionado.ID, veiculo.ID)
+			fmt.Printf("Posto %s: Veículo %s removido da fila.\n", posto_selecionado.ID, veiculo.ID)
+			modelo.CarregarBateria(&veiculo, posto_selecionado)
 		}
 	} else {
 		fmt.Printf("\n\nO posto foi desconectado! O veículo não está mais se deslocando para lá!\n\n")

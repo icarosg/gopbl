@@ -282,7 +282,7 @@ func atualizarPosicaoFila(r json.RawMessage) {
 		veiculoDadosAtualizados = *posto_criado.Fila[veiculoEncontrado]
 	} else {
 		veiculoDadosAtualizados = dados.Veiculo
-		veiculoDadosAtualizados.Bateria = 100
+		// veiculoDadosAtualizados.Bateria = 100
 		veiculoDadosAtualizados.IsCarregando = false
 		veiculoDadosAtualizados.IsDeslocandoAoPosto = false
 	}
