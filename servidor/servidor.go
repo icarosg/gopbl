@@ -159,6 +159,14 @@ func cliente(conexao net.Conn) {
 				fmt.Println("cliente desconectado, conexoes de postos restantes: ", conexoes_clientes)
 			}
 		}
+
+		for chave, valor := range dicionarioConexoesClientes { //remove do dicionário
+			if valor == conexao {
+				delete(dicionarioConexoesClientes, chave)
+				break
+			}
+		}
+
 		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
 		conexao.Close()
 	}() // decrementa após a conexão ser encerrada
@@ -255,27 +263,33 @@ func posto(conexao net.Conn) {
 				return
 			}
 
-			resposta := modelo.RecomendadoResponse{
-				ID_posto:  dados.Posto.ID,
-				Latitude:  dados.Posto.Latitude,
-				Longitude: dados.Posto.Longitude,
-				// Posicao_na_fila: modelo.GetPosFila(*veiculo, postoRecebido),
-			}
+			_, existe := dicionarioConexoesClientes[dados.ID_veiculo] //verifica se o id do veículo existe no dicionário
 
-			respostaJSON, err := json.Marshal(resposta)
-			if err != nil {
-				fmt.Println("Erro ao codificar resposta")
-				return
-			}
-			respostaRequisicao := Requisicao{
-				Comando: "new-vaga",
-				Dados:   respostaJSON,
-			}
+			if existe {
+				resposta := modelo.RecomendadoResponse{
+					ID_posto:  dados.Posto.ID,
+					Latitude:  dados.Posto.Latitude,
+					Longitude: dados.Posto.Longitude,
+					// Posicao_na_fila: modelo.GetPosFila(*veiculo, postoRecebido),
+				}
 
-			// fmt.Println("enviando a resposta do reservar vaga")
-			// fmt.Println("conex clientes", conexoes_clientes)
-			// enviarResposta(conexoes_clientes[0], respostaRequisicao)
-			enviarResposta(dicionarioConexoesClientes[dados.ID_veiculo], respostaRequisicao)
+				respostaJSON, err := json.Marshal(resposta)
+				if err != nil {
+					fmt.Println("Erro ao codificar resposta")
+					return
+				}
+				respostaRequisicao := Requisicao{
+					Comando: "new-vaga",
+					Dados:   respostaJSON,
+				}
+
+				// fmt.Println("enviando a resposta do reservar vaga")
+				// fmt.Println("conex clientes", conexoes_clientes)
+				// enviarResposta(conexoes_clientes[0], respostaRequisicao)
+				enviarResposta(dicionarioConexoesClientes[dados.ID_veiculo], respostaRequisicao)
+			} else {
+				fmt.Println("O veículo está desconectado! Não foi possível enviar a resposta!")
+			}
 
 		case "atualizar-posicao-veiculo":
 			//envia a resposta para o veículo
@@ -287,27 +301,32 @@ func posto(conexao net.Conn) {
 			}
 
 			//fmt.Println("dados", dados)
+			_, existe := dicionarioConexoesClientes[dados.Veiculo.ID] //verifica se o id do veículo existe no dicionário
 
-			resposta := modelo.RetornarAtualizarPosicaoFila{
-				Veiculo: dados.Veiculo,
-				Posto:   dados.Posto,
-				// Posicao_na_fila: modelo.GetPosFila(*veiculo, postoRecebido),
-			}
+			if existe {
+				resposta := modelo.RetornarAtualizarPosicaoFila{
+					Veiculo: dados.Veiculo,
+					Posto:   dados.Posto,
+					// Posicao_na_fila: modelo.GetPosFila(*veiculo, postoRecebido),
+				}
 
-			respostaJSON, err := json.Marshal(resposta)
-			if err != nil {
-				fmt.Println("Erro ao codificar resposta")
-				return
-			}
-			respostaRequisicao := Requisicao{
-				Comando: "atualizar-posicao-veiculo",
-				Dados:   respostaJSON,
-			}
+				respostaJSON, err := json.Marshal(resposta)
+				if err != nil {
+					fmt.Println("Erro ao codificar resposta")
+					return
+				}
+				respostaRequisicao := Requisicao{
+					Comando: "atualizar-posicao-veiculo",
+					Dados:   respostaJSON,
+				}
 
-			// fmt.Println("enviando a resposta do atualizar fila")
-			// fmt.Println("conex clientes", conexoes_clientes[0])
-			// enviarResposta(conexoes_clientes[0], respostaRequisicao)
-			enviarResposta(dicionarioConexoesClientes[dados.Veiculo.ID], respostaRequisicao)
+				// fmt.Println("enviando a resposta do atualizar fila")
+				// fmt.Println("conex clientes", conexoes_clientes[0])
+				// enviarResposta(conexoes_clientes[0], respostaRequisicao)
+				enviarResposta(dicionarioConexoesClientes[dados.Veiculo.ID], respostaRequisicao)
+			} else {
+				fmt.Println("O veículo está desconectado! Não foi possível enviar a resposta!")
+			}
 		}
 	}
 }
