@@ -51,7 +51,7 @@ func ReservarVaga(p *Posto, v *Veiculo) bool {
 	} else {
 		p.Fila = append(p.Fila, v)
 		p.QtdFila++
-		fmt.Printf("Posto %s: Veículo %s adicionado à fila de espera. Posição: %d\n\n", p.ID, v.ID, p.QtdFila)
+		fmt.Printf("\n\nPosto %s: Veículo %s adicionado à fila de espera. Posição: %d\n\n", p.ID, v.ID, p.QtdFila)
 		return false
 	}
 }

@@ -94,7 +94,6 @@ func receberResposta() json.RawMessage {
 	case "listar-veiculos":
 		return response.Dados
 	case "new-vaga":
-		fmt.Println("passou por cá")
 		return response.Dados
 	case "atualizar-posicao-veiculo":
 		return response.Dados
@@ -142,7 +141,6 @@ func selecionarObjetivo() {
 						if veiculo.IsDeslocandoAoPosto {
 							modelo.DeslocarParaPosto(&veiculo, posto_selecionado) // altera a posição para ir para o posto e faz a requisição para salvar nova posição na fila do posto
 							atualizarPosicaoVeiculoNaFila()
-							fmt.Println("teste")
 							// modelo.ArrumarPosicaoFila(posto_selecionado)
 						} else {
 							modelo.AtualizarLocalizacao(&veiculo)
@@ -158,6 +156,8 @@ func selecionarObjetivo() {
 		} else {
 			fmt.Println("Você ainda não possui um veículo.")
 		}
+
+		opcao = -1
 
 		fmt.Printf("Digite 0 para cadastrar seu veículo\n")
 		fmt.Printf("Digite 1 para listar os veículos e importar algum\n")
@@ -271,8 +271,26 @@ func listarEImportarVeiculo() []modelo.Veiculo {
 		fmt.Println("Veículo não encontrado")
 		return nil
 	} else {
-		veiculo = *veiculo_selecionado
-		fmt.Println("Veículo importado com sucesso!")
+		veiculoImportado := *veiculo_selecionado
+		veiculo = modelo.NovoVeiculo(veiculoImportado.ID, veiculoImportado.Latitude, veiculoImportado.Latitude)
+		veiculo.Bateria = veiculoImportado.Bateria
+
+		veiculoJSON, erro := json.Marshal(veiculo)
+		if erro != nil {
+			fmt.Printf("Erro ao converter veículo para JSON: %v\n", erro)
+			return nil
+		}
+
+		req := Requisicao{
+			Comando: "cadastrar-veiculo",
+			Dados:   veiculoJSON,
+		}
+
+		erro = enviarRequisicao(req)
+
+		if erro == nil {
+			fmt.Println("Veículo importado com sucesso!")
+		}
 	}
 
 	return veiculos
@@ -426,24 +444,24 @@ func reservarVaga() {
 
 	resp := receberResposta()
 	if resp == nil {
-		fmt.Println("Erro ao listar postos")
+		fmt.Println("ID do posto não encontrado! Não foi possível reservar a vaga")
 		return
+	} else {
+		//to convertendo o JSON para um slice de postos
+		var vagaFeita RecomendadoResponse
+		erro = json.Unmarshal(resp, &vagaFeita)
+		if erro != nil {
+			fmt.Println("Erro ao converter JSON da resposta:", erro)
+			return
+		}
+
+		veiculo.IsDeslocandoAoPosto = true //ao reservar, automaticamente o veículo começa se deslocar para o posto
+
+		fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
+		fmt.Println("latitude: ", vagaFeita.Latitude)
+		fmt.Println("longitude: ", vagaFeita.Longitude)
+		// fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
 	}
-
-	//to convertendo o JSON para um slice de postos
-	var vagaFeita RecomendadoResponse
-	erro = json.Unmarshal(resp, &vagaFeita)
-	if erro != nil {
-		fmt.Println("Erro ao converter JSON da resposta:", erro)
-		return
-	}
-
-	veiculo.IsDeslocandoAoPosto = true //ao reservar, automaticamente o veículo começa se deslocar para o posto
-
-	fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
-	fmt.Println("latitude: ", vagaFeita.Latitude)
-	fmt.Println("longitude: ", vagaFeita.Longitude)
-	// fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
 }
 
 func atualizarPosicaoVeiculoNaFila() {
@@ -483,11 +501,22 @@ func atualizarPosicaoVeiculoNaFila() {
 		return
 	}
 
-	veiculo = dados.Veiculo
-	posto_selecionado = &dados.Posto
+	if dados.Posto.ID != "" {
+		fmt.Printf("\n\nveiculo recebido: %f %f\n\n", dados.Veiculo.Latitude, dados.Veiculo.Longitude)
+		//fmt.Println("postorecebido:", &dados.Posto)
 
-	if !veiculo.IsDeslocandoAoPosto {
-		fmt.Printf("Posto %s: Veículo %s removido da fila e iniciando carregamento\n", posto_selecionado.ID, veiculo.ID)
+		veiculo = dados.Veiculo
+		posto_selecionado = &dados.Posto
+
+		if !veiculo.IsDeslocandoAoPosto {
+			fmt.Printf("Posto %s: Veículo %s removido da fila, finalizou o seu carregamento e voltou ao seu deslocamento normal\n", posto_selecionado.ID, veiculo.ID)
+		}
+	} else {
+		fmt.Printf("\n\nO posto foi desconectado! O veículo não está mais se deslocando para lá!\n\n")
+
+		veiculo = dados.Veiculo
+		veiculo.IsDeslocandoAoPosto = false
+		veiculo.IsCarregando = false
 	}
 
 }
