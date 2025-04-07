@@ -72,6 +72,9 @@ docker attach gopbl-cliente-posto-1
 
 # Para interagir com o cliente veículo
 docker attach gopbl-cliente-veiculo-1
+
+# Para interagir com o servidor
+docker attach gopbl-main-servidor-1
 ```
 
 ### Fluxo de Uso
