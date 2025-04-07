@@ -18,4 +18,5 @@ COPY --from=builder /app/servidor/postos.json ./postos.json
 COPY --from=builder /app/servidor/veiculos.json ./veiculos.json
 
 EXPOSE 8080
+#EXPOSE 22
 CMD ["./servidor"]

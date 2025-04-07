@@ -5,6 +5,7 @@ services:
       dockerfile: servidor.Dockerfile
     ports:
       - "9090:9090"
+      #- "22:22"
     networks:
       - app-network
     volumes:
@@ -20,6 +21,7 @@ services:
       dockerfile: cliente-posto.Dockerfile
     ports:
       - "8081:8081"
+      #- "22:22"
     networks:
       - app-network
     depends_on:
@@ -28,14 +30,15 @@ services:
       - ./modelo:/app/modelo
     restart: unless-stopped
 
-  cliente-veiculo:
+  cliente-posto-um:
     stdin_open: true
     tty: true
     build:
       context: .
-      dockerfile: cliente-veiculo.Dockerfile
+      dockerfile: cliente-posto.Dockerfile
     ports:
-      - "8082:8082"
+      - "8085:8085"
+      #- "22:22"
     networks:
       - app-network
     depends_on:
@@ -43,6 +46,58 @@ services:
     volumes:
       - ./modelo:/app/modelo
     restart: unless-stopped
+
+  cliente-veiculo-um:
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: cliente-veiculo.Dockerfile
+    ports:
+      - "8082:8082"
+      #- "22:22"
+    networks:
+      - app-network
+    depends_on:
+      - servidor
+    volumes:
+      - ./modelo:/app/modelo
+    restart: unless-stopped    
+
+  cliente-veiculo-dois:
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: cliente-veiculo.Dockerfile
+    ports:
+      - "8083:8083"
+      #- "22:22"
+    networks:
+      - app-network
+    depends_on:
+      - servidor
+    volumes:
+      - ./modelo:/app/modelo
+    restart: unless-stopped 
+
+
+  cliente-veiculo-tres:
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: cliente-veiculo.Dockerfile
+    ports:
+      - "8084:8084"
+      #- "22:22"
+    networks:
+      - app-network
+    depends_on:
+      - servidor
+    volumes:
+      - ./modelo:/app/modelo
+    restart: unless-stopped 
 
 networks:
   app-network:
