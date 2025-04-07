@@ -1,0 +1,14 @@
+1 - utilizar o comando docker-compose build para construir as imagens definidas no compose
+
+2 - utilizar o comando docker-compose up -d para inicar os container em segundo plano
+
+3 - utilizar o comando docker ps para listar/verificar os container em execução
+
+4 - utilizar os comando:
+    docker attach gopbl-main-servidor-1 para acessar e ver o que esta rodando no servidor
+    docker attach gopbl-main-cliente-veiculo-um-1 para acessar, ver e interagir no veiculo 1
+    docker attach gopbl-main-cliente-veiculo-dois-1 para acessar, ver e interagir no veiculo 2
+    docker attach gopbl-main-cliente-veiculo-tres-1 para acessar, ver e interagir no veiculo 3
+
+    docker attach gopbl-main-cliente-posto-1 para acessar, ver e interagir no posto 1
+    docker attach gopbl-main-cliente-posto-um-1 para acessar, ver e interagir no posto 2

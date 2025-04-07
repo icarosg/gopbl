@@ -16,4 +16,6 @@ COPY --from=builder /app/cliente .
 COPY --from=builder /app/modelo ./modelo
 
 EXPOSE 8082
+#EXPOSE 22
+
 CMD ["./cliente"] 

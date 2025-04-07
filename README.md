@@ -59,22 +59,33 @@ A comunicação entre os componentes é realizada através de sockets TCP, utili
 git clone https://github.com/icarosg/gopbl.git
 cd gopbl
 ```
-
-2. Execute o sistema usando Docker Compose:
+2. Contrua as imagens:
+```
+utilizar o comando docker-compose build para construir as imagens definidas no compose
+```
+3. Execute o sistema usando Docker Compose:
 ```
 docker-compose up -d
 ```
 
-3. Interaja com os clientes:
+4. Interaja com os clientes:
 ```
 # Para interagir com o cliente posto
 docker attach gopbl-cliente-posto-1
 
 # Para interagir com o cliente veículo
-docker attach gopbl-cliente-veiculo-1
+docker attach gopbl-cliente-veiculo-um-1
 
 # Para interagir com o servidor
 docker attach gopbl-main-servidor-1
+```
+
+5. Caso queria interagir com mais entidades:
+```
+#  docker attach gopbl-main-cliente-veiculo-dois-1 para acessar, ver e interagir no veiculo 2
+#  docker attach gopbl-main-cliente-veiculo-tres-1 para acessar, ver e interagir no veiculo 3
+
+# docker attach gopbl-main-cliente-posto-um-1 para acessar, ver e interagir no posto 2
 ```
 
 ### Fluxo de Uso

@@ -30,7 +30,7 @@ var importandoVeiculo bool = false
 
 func main() {
 	var erro error
-	// conexao, erro = net.Dial("tcp", "localhost:8080")
+	//conexao, erro = net.Dial("tcp", "localhost:8080")
 	
 	// em ambiente Docker, usar o nome do serviço em vez de localhost
 	conexao, erro = net.Dial("tcp", "servidor:9090")
@@ -175,7 +175,7 @@ func selecionarObjetivo() {
 	go verificarAlgoNoBuffer()
 
 	for {
-		if !importandoVeiculo {
+		if !importandoVeiculo {			
 			fmt.Printf("Digite 0 para cadastrar seu posto\n")
 			fmt.Printf("Digite 1 para listar os postos e importar algum\n")
 
@@ -229,6 +229,8 @@ func cadastrarPosto() {
 }
 
 func reservarVaga(r json.RawMessage) {
+	mutex.Lock()
+	defer mutex.Unlock()
 	var dados modelo.ReservarVagaJson
 	erro := json.Unmarshal(r, &dados)
 	if erro != nil {
@@ -261,6 +263,8 @@ func reservarVaga(r json.RawMessage) {
 }
 
 func atualizarPosicaoFila(r json.RawMessage) {
+	mutex.Lock()
+	defer mutex.Unlock()
 	var dados modelo.ReservarVagaJson
 	erro := json.Unmarshal(r, &dados)
 	if erro != nil {

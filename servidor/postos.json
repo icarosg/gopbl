@@ -1,21 +1,5 @@
 [
     {
-        "ID": "guilhermeTeste",
-        "Latitude": 10,
-        "Longitude": 10,
-        "Fila": [],
-        "QtdFila": 0,
-        "BombaOcupada": false
-    },
-    {
-        "ID": "new",
-        "Latitude": 50,
-        "Longitude": 50,
-        "Fila": [],
-        "QtdFila": 0,
-        "BombaOcupada": false
-    },
-    {
         "ID": "novo",
         "Latitude": 30,
         "Longitude": 30,
@@ -25,6 +9,30 @@
     },
     {
         "ID": "teste",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "guilhermeTeste",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "gg",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Fila": [],
+        "QtdFila": 0,
+        "BombaOcupada": false
+    },
+    {
+        "ID": "new",
         "Latitude": 50,
         "Longitude": 50,
         "Fila": [],

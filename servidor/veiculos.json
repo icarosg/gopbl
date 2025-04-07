@@ -1,4 +1,22 @@
-[  
+[
+    {
+        "ID": "testeVeiculo2",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "testeLarsid",
+        "Latitude": 70,
+        "Longitude": 70,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
     {
         "ID": "novo",
         "Latitude": 0,
@@ -6,8 +24,14 @@
         "Bateria": 100,
         "IsCarregando": false,
         "IsDeslocandoAoPosto": false,
-        "Pagamentos": null
-    },    
+        "Pagamentos": [
+            {
+                "id_veiculo": "novo",
+                "valor": 3.6712185543278864,
+                "id_posto": "guilhermeTeste"
+            }
+        ]
+    },
     {
         "ID": "guilhermeTeste",
         "Latitude": 10,
@@ -30,6 +54,259 @@
                 "id_veiculo": "guilhermeTeste",
                 "valor": 21.54925992913717,
                 "id_posto": "guilhermeTeste"
+            },
+            {
+                "id_veiculo": "guilhermeTeste",
+                "valor": 5.724249100416529,
+                "id_posto": "guilhermeTeste"
+            },
+            {
+                "id_veiculo": "guilhermeTeste",
+                "valor": 15.311285923485826,
+                "id_posto": "teste"
+            }
+        ]
+    },
+    {
+        "ID": "jkjk",
+        "Latitude": 80,
+        "Longitude": 80,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "jkjk",
+                "valor": 7.841453855628366,
+                "id_posto": "teste"
+            },
+            {
+                "id_veiculo": "jkjk",
+                "valor": 45,
+                "id_posto": "novo"
+            }
+        ]
+    },
+    {
+        "ID": "",
+        "Latitude": 0,
+        "Longitude": 0,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "fff",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "fff",
+                "valor": 15.502705384312712,
+                "id_posto": "teste"
+            }
+        ]
+    },
+    {
+        "ID": "testVeiculo1",
+        "Latitude": 200,
+        "Longitude": 200,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "testVeiculo1",
+                "valor": 45,
+                "id_posto": "guilhermeTeste"
+            }
+        ]
+    },
+    {
+        "ID": "testePcDireita",
+        "Latitude": 800,
+        "Longitude": 800,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "testePcDireita",
+                "valor": 45,
+                "id_posto": "teste"
+            },
+            {
+                "id_veiculo": "testePcDireita",
+                "valor": 45,
+                "id_posto": "teste"
+            }
+        ]
+    },
+    {
+        "ID": "ggggg",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "ggggg",
+                "valor": 10.55038204395543,
+                "id_posto": "teste"
+            },
+            {
+                "id_veiculo": "ggggg",
+                "valor": 11.816834118568245,
+                "id_posto": "teste"
+            }
+        ]
+    },
+    {
+        "ID": "testePcArthur",
+        "Latitude": 700,
+        "Longitude": 700,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "testePcArthur",
+                "valor": 45,
+                "id_posto": "teste"
+            },
+            {
+                "id_veiculo": "testePcArthur",
+                "valor": 45,
+                "id_posto": "new"
+            }
+        ]
+    },
+    {
+        "ID": "kkk",
+        "Latitude": 10,
+        "Longitude": 10,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "kkk",
+                "valor": 18.302110663197666,
+                "id_posto": "teste"
+            }
+        ]
+    },
+    {
+        "ID": "agsdhjasd",
+        "Latitude": 20,
+        "Longitude": 20,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "agsdhjasd",
+                "valor": 9.073497668935062,
+                "id_posto": "new"
+            },
+            {
+                "id_veiculo": "agsdhjasd",
+                "valor": 27.334447448796556,
+                "id_posto": "new"
+            }
+        ]
+    },
+    {
+        "ID": "testeArthur",
+        "Latitude": 90,
+        "Longitude": 90,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "testeArthur",
+                "valor": 18.8469654626822,
+                "id_posto": "new"
+            },
+            {
+                "id_veiculo": "testeArthur",
+                "valor": 9.230847803155818,
+                "id_posto": "teste"
+            },
+            {
+                "id_veiculo": "testeArthur",
+                "valor": 45,
+                "id_posto": "novo"
+            }
+        ]
+    },
+    {
+        "ID": "arthur",
+        "Latitude": 50,
+        "Longitude": 50,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "arthur",
+                "valor": 1.9408219487862297,
+                "id_posto": "teste"
+            },
+            {
+                "id_veiculo": "arthur",
+                "valor": 11.43538430200924,
+                "id_posto": "new"
+            }
+        ]
+    },
+    {
+        "ID": "asgdhjas",
+        "Latitude": 20,
+        "Longitude": 20,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "asgdhjas",
+                "valor": 7.5288589947917615,
+                "id_posto": "new"
+            },
+            {
+                "id_veiculo": "asgdhjas",
+                "valor": 28.780798366601235,
+                "id_posto": "new"
+            }
+        ]
+    },
+    {
+        "ID": "testeVeiculo3",
+        "Latitude": 100,
+        "Longitude": 100,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": null
+    },
+    {
+        "ID": "testePcEsquerda",
+        "Latitude": 5000,
+        "Longitude": 5000,
+        "Bateria": 100,
+        "IsCarregando": false,
+        "IsDeslocandoAoPosto": false,
+        "Pagamentos": [
+            {
+                "id_veiculo": "testePcEsquerda",
+                "valor": 45,
+                "id_posto": "teste"
             }
         ]
     }

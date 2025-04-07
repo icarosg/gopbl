@@ -41,7 +41,7 @@ var conexao net.Conn
 
 func main() {
 	var erro error
-	// conexao, erro = net.Dial("tcp", "localhost:8080")
+	//conexao, erro = net.Dial("tcp", "localhost:8080")
 	
 	// em ambiente Docker, usar o nome do serviço em vez de localhost
 	conexao, erro = net.Dial("tcp", "servidor:9090")
@@ -166,42 +166,49 @@ func selecionarObjetivo() {
 		}
 
 		opcao = -1
-		fmt.Println("-------------------------------------------")
-		fmt.Printf("Digite 0 para cadastrar seu veículo\n")
-		fmt.Printf("Digite 1 para listar os veículos e importar algum\n")
-		fmt.Print("Digite 2 para encontrar posto recomendado\n")
-		fmt.Printf("Digite 3 para reservar vaga em um posto\n")
-		fmt.Printf("Digite 4 para listar todos os postos\n")
-		fmt.Printf("Digite 5 para exibir os pagamentos realizados\n")
-		fmt.Println("-------------------------------------------")
-		fmt.Scanln(&opcao)
-		switch {
-		case opcao == 0:
-			fmt.Println("Cadastrar veículo")
-			cadastrarVeiculo()
+		if !veiculo.IsDeslocandoAoPosto{
+			fmt.Println("-------------------------------------------")
+			fmt.Printf("Digite 0 para cadastrar seu veículo\n")
+			fmt.Printf("Digite 1 para listar os veículos e importar algum\n")
+			fmt.Print("Digite 2 para encontrar posto recomendado\n")
+			fmt.Printf("Digite 3 para reservar vaga em um posto\n")
+			fmt.Printf("Digite 4 para listar todos os postos\n")
+			fmt.Printf("Digite 5 para exibir os pagamentos realizados\n")
+			fmt.Println("-------------------------------------------")
+			fmt.Scanln(&opcao)
+			switch {
+			case opcao == 0:
+				fmt.Println("Cadastrar veículo")
+				cadastrarVeiculo()
 
-		case opcao == 1:
-			fmt.Println("Listar e importar veículo")
-			listarEImportarVeiculo()
+			case opcao == 1:
+				fmt.Println("Listar e importar veículo")
+				listarEImportarVeiculo()
 
-		case opcao == 2:
-			fmt.Println("Encontrar posto recomendado")
-			encontrarPostoRecomendado()
+			case opcao == 2:
+				fmt.Println("Encontrar posto recomendado")
+				encontrarPostoRecomendado()
 
-		case opcao == 3:
-			fmt.Println("Reservar vaga em um posto")
-			reservarVaga()
+			case opcao == 3:
+				fmt.Println("Reservar vaga em um posto")
+				reservarVaga()
 
-		case opcao == 4:
-			fmt.Println("Listar todos os postos")
-			listarPostos()
-		case opcao == 5:
-			fmt.Println("Listar pagamentos realizados")
-			exibirPagamentosRealizados()
+			case opcao == 4:
+				fmt.Println("Listar todos os postos")
+				listarPostos()
+			case opcao == 5:
+				fmt.Println("Listar pagamentos realizados")
+				exibirPagamentosRealizados()
 
-		default:
-			fmt.Println("Opção inválida")
+			default:				
+				fmt.Println("Opção inválida")
+			}
+		} else {
+		 	var nada string			
+			fmt.Println("Menu de ações bloqueado, seu veiculo esta de deslocando a um posto")
+			fmt.Scanln(&nada)
 		}
+		
 	}
 }
 

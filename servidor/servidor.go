@@ -53,9 +53,10 @@ var (
 func main() {
 	// cria um listener TCP na porta 9090, ouvindo em todas as interfaces
 
-	listener, erro := net.Listen("tcp", "localhost:8080")
+	//listener, erro := net.Listen("tcp", "localhost:8080")
 
-	//listener, erro := net.Listen("tcp", "0.0.0.0:9090")
+	listener, erro := net.Listen("tcp", "0.0.0.0:9090")
+	//listener, erro := net.Listen("tcp", "172.16.103.5:9295")
 
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
@@ -95,14 +96,15 @@ func main() {
 func cliente(conexao net.Conn) {
 	defer func() {
 		decrementar()
-		for i := range conexoes_clientes {
-			c := conexoes_clientes[i]
-			if conexao == c {
-				salvarNoArquivo("veiculos.json")
-				conexoes_clientes = append(conexoes_clientes[:i], conexoes_clientes[i+1:]...)
-				fmt.Println("cliente desconectado, conexoes de postos restantes: ", conexoes_clientes)
-			}
-		}
+		// for i := range conexoes_clientes {
+		// 	c := conexoes_clientes[i]
+		// 	if conexao == c {
+		// 		salvarNoArquivo("veiculos.json")
+		// 		conexoes_clientes = append(conexoes_clientes[:i], conexoes_clientes[i+1:]...)
+		// 		fmt.Println("cliente desconectado, conexoes de postos restantes: ", conexoes_clientes)
+		// 		break
+		// 	}
+		// }
 
 		for chave, valor := range dicionarioConexoesClientes { //remove do dicionário
 			if valor == conexao {
@@ -110,6 +112,7 @@ func cliente(conexao net.Conn) {
 				break
 			}
 		}
+		salvarNoArquivo("veiculos.json")
 
 		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
 		conexao.Close()
@@ -164,6 +167,7 @@ func posto(conexao net.Conn) {
 			if conexao == p {
 				conexoes_postos = append(conexoes_postos[:i], conexoes_postos[i+1:]...)
 				fmt.Println("posto desconectado, conexoes de postos restantes: ", conexoes_postos)
+				break
 			}
 		}
 		fmt.Println("Cliente desconectado. Total de clientes conectados:", getQtdClientes())
@@ -527,8 +531,8 @@ func listarPostosDoArquivo(conexao net.Conn) {
 }
 
 func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
-	// postosMutex.Lock()
-	// defer postosMutex.Unlock()
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
 	armazenarPostosNaLista()
 
 	// decodifica o JSON do body da req
@@ -592,6 +596,8 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 }
 
 func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
+	// postosMutex.Lock()
+	// defer postosMutex.Unlock()
 	armazenarPostosNaLista()
 
 	// decodifica o JSON do body da req
