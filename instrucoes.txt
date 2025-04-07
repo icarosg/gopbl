@@ -12,5 +12,3 @@
 
     docker attach gopbl-main-cliente-posto-1 para acessar, ver e interagir no posto 1
     docker attach gopbl-main-cliente-posto-um-1 para acessar, ver e interagir no posto 2
-
-
