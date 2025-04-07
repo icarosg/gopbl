@@ -34,6 +34,7 @@ func main() {
 	
 	// em ambiente Docker, usar o nome do serviço em vez de localhost
 	conexao, erro = net.Dial("tcp", "servidor:9090")
+
 	if erro != nil {
 		fmt.Println("Erro ao conectar ao servidor:", erro)
 		return
@@ -278,7 +279,7 @@ func atualizarPosicaoFila(r json.RawMessage) {
 			veiculoEncontrado = i
 		}
 
-		fmt.Printf("Posição %d: ID VEÍCULO: %s LONGITUDE E LATITUDE: %f %f\n\n", i, posto_criado.Fila[i].ID, posto_criado.Fila[i].Longitude, posto_criado.Fila[i].Latitude)
+		fmt.Printf("Posição %d: \nId Veiculo: %s \nLongitude e Latitude: %.2f %.2f\n\n", i, posto_criado.Fila[i].ID, posto_criado.Fila[i].Longitude, posto_criado.Fila[i].Latitude)
 	}
 
 	if veiculoEncontrado != -1 {
@@ -346,7 +347,7 @@ func listarEImportarPostoResposta(r json.RawMessage) {
 
 	for i := range postos {
 		p := &postos[i]
-		fmt.Println("test", novoID)
+		//fmt.Println("test", novoID)
 
 		if p.ID == novoID {
 			postoEncontrado = true

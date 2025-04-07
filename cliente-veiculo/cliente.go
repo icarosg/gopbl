@@ -45,6 +45,7 @@ func main() {
 	
 	// em ambiente Docker, usar o nome do serviço em vez de localhost
 	conexao, erro = net.Dial("tcp", "servidor:9090")
+  
 	if erro != nil {
 		fmt.Println("Erro ao conectar ao servidor:", erro)
 		return
@@ -155,18 +156,24 @@ func selecionarObjetivo() {
 		}
 
 		if veiculo.ID != "" {
-			fmt.Printf("O ID DO SEU VEÍCULO É: %s. \nLONGITUDE E LATITUDE: %v, %v. \nBATERIA: %v\n\n\n", veiculo.ID, veiculo.Longitude, veiculo.Latitude, veiculo.Bateria)
+			fmt.Println("****************************")
+			fmt.Printf("O id do seu veiculo é: %s. \nLongitude%.2f \nLatitude: %.2f \nBateria em: %.2f\n", veiculo.ID, veiculo.Longitude, veiculo.Latitude, veiculo.Bateria)
+			fmt.Println("****************************")		
 		} else {
+			fmt.Println("****************************")
 			fmt.Println("Você ainda não possui um veículo.")
+			fmt.Println("****************************")	
 		}
 
 		opcao = -1
-
+		fmt.Println("-------------------------------------------")
 		fmt.Printf("Digite 0 para cadastrar seu veículo\n")
 		fmt.Printf("Digite 1 para listar os veículos e importar algum\n")
 		fmt.Print("Digite 2 para encontrar posto recomendado\n")
 		fmt.Printf("Digite 3 para reservar vaga em um posto\n")
 		fmt.Printf("Digite 4 para listar todos os postos\n")
+		fmt.Printf("Digite 5 para exibir os pagamentos realizados\n")
+		fmt.Println("-------------------------------------------")
 		fmt.Scanln(&opcao)
 		switch {
 		case opcao == 0:
@@ -188,6 +195,9 @@ func selecionarObjetivo() {
 		case opcao == 4:
 			fmt.Println("Listar todos os postos")
 			listarPostos()
+		case opcao == 5:
+			fmt.Println("Listar pagamentos realizados")
+			exibirPagamentosRealizados()
 
 		default:
 			fmt.Println("Opção inválida")
@@ -195,13 +205,29 @@ func selecionarObjetivo() {
 	}
 }
 
+func exibirPagamentosRealizados() {
+	for i := range veiculo.Pagamentos {
+		pagamento := veiculo.Pagamentos[i]
+		fmt.Println()
+		fmt.Println("--------------------------------------------")
+		fmt.Println("Pagamentos realizados: ")
+		fmt.Printf("ID do veículo: %s\n", pagamento.Veiculo)
+		fmt.Printf("ID do posto: %s\n", pagamento.ID_posto)
+		fmt.Printf("Valor pago: %.2f\n", pagamento.Valor)
+		fmt.Println("----------------------------------------")
+		fmt.Println()
+	}
+}
+
 func cadastrarVeiculo() {
+	fmt.Println("--------------------------------------------")
 	fmt.Println("Digite o ID do veículo a ser cadastrado:")
 	fmt.Scanln(&id)
 	fmt.Println("Digite a latitude do veículo:")
 	fmt.Scanln(&latitude)
 	fmt.Println("Digite a longitude do veículo:")
 	fmt.Scanln(&longitude)
+	fmt.Println("--------------------------------------------")
 	// fmt.Println("Digite a procetagem de bateria do veículo:")
 	// fmt.Scanln(&bateria)
 
@@ -248,6 +274,9 @@ func listarEImportarVeiculo() []modelo.Veiculo {
 
 	for i := range veiculos {
 		veiculo := &veiculos[i]
+		fmt.Println()
+		fmt.Println("--------------------------------------------")
+		fmt.Println("Abaixo veiculo disponívei para importação")
 		fmt.Printf("ID: %s\n", veiculo.ID)
 		fmt.Printf("Latitude: %.2f\n", veiculo.Latitude)
 		fmt.Printf("Longitude: %.2f\n", veiculo.Longitude)
@@ -271,12 +300,15 @@ func listarEImportarVeiculo() []modelo.Veiculo {
 		}
 	}
 	if !veiculoEncontrado {
+		fmt.Println("--------------------------------------------")
 		fmt.Println("Veículo não encontrado")
+		fmt.Println("--------------------------------------------")
 		return nil
 	} else {
 		veiculoImportado := *veiculo_selecionado
 		veiculo = modelo.NovoVeiculo(veiculoImportado.ID, veiculoImportado.Latitude, veiculoImportado.Latitude)
 		veiculo.Bateria = veiculoImportado.Bateria
+		veiculo.Pagamentos = veiculoImportado.Pagamentos
 
 		veiculoJSON, erro := json.Marshal(veiculo)
 		if erro != nil {
@@ -292,7 +324,9 @@ func listarEImportarVeiculo() []modelo.Veiculo {
 		erro = enviarRequisicao(req)
 
 		if erro == nil {
+			fmt.Println("--------------------------------------------")
 			fmt.Println("Veículo importado com sucesso!")
+			fmt.Println("--------------------------------------------")
 		}
 	}
 
@@ -379,6 +413,7 @@ func encontrarPostoRecomendado() {
 }
 
 func reservarVaga() {
+	fmt.Println("--------------------------------------------")
 	fmt.Println("Posto recomendado atualmente: ")
 	encontrarPostoRecomendado()
 	fmt.Println("A seguir a lista com todos os postos disponíveis: ")
@@ -386,6 +421,7 @@ func reservarVaga() {
 	fmt.Println("Digite o ID do posto que deseja reservar: ")
 	var idPosto string
 	fmt.Scanln(&idPosto)
+	fmt.Println("--------------------------------------------")
 
 	var postoEncontrado bool = false
 	//var pagamentoRealizado bool = false
@@ -404,13 +440,16 @@ func reservarVaga() {
 	}
 	valorPraPagar := (100 - modelo.GetNivelBateriaAoChegarNoPosto(veiculo, posto_selecionado)) * 0.5 //0.5 reais por % nivel de bateria
 	for {
+		fmt.Println("--------------------------------------------")
 		fmt.Println("É necessario realizar o pagamento para reservar a vaga")
 		fmt.Printf("O valor a ser pago é de %.2f\n", valorPraPagar)
 		fmt.Println("Deseja concluir o pagamento? (0 - sim, 1 - nao): ")
+		fmt.Println("--------------------------------------------")
 		var opcao int
 		fmt.Scanf("%d", &opcao)
 		if opcao == 0 {
-			fmt.Printf("Pagamento realizado com sucesso!, o valor de %.2f foi cobrado da sua conta bancaria\n", valorPraPagar)
+			fmt.Printf("Estamos tentando realizar o pagamento de %.2f\n", valorPraPagar)
+			fmt.Println("--------------------------------------------")
 			break
 		} else if opcao == 1 {
 			fmt.Println("Pagamento não realizado")
@@ -447,9 +486,12 @@ func reservarVaga() {
 
 	resp := receberResposta()
 	if resp == nil {
+		fmt.Println("*******************")
 		fmt.Println("ID do posto não encontrado! Não foi possível reservar a vaga")
+		fmt.Printf("Pagamento de %.2f foi estornado para sua conta\n", valorPraPagar)
+		fmt.Println("*******************")
 		return
-	} else {
+	} else {		
 		//to convertendo o JSON para um slice de postos
 		var vagaFeita RecomendadoResponse
 		erro = json.Unmarshal(resp, &vagaFeita)
@@ -457,12 +499,21 @@ func reservarVaga() {
 			fmt.Println("Erro ao converter JSON da resposta:", erro)
 			return
 		}
+		fmt.Printf("Pagamento realizado com sucesso!, o valor de %.2f foi cobrado da sua conta bancaria\n", valorPraPagar)
+		pag := modelo.Pagamento{
+			Veiculo:  veiculo.ID,
+			Valor:    valorPraPagar,
+			ID_posto: posto_selecionado.ID,
+		}
+		//veiculo.Pagamentos = append(veiculo.Pagamentos, pagamentoFeito)
+		veiculo.Pagamentos = append(veiculo.Pagamentos, pag)
 
 		veiculo.IsDeslocandoAoPosto = true //ao reservar, automaticamente o veículo começa se deslocar para o posto
-
+		fmt.Println("*******************")
 		fmt.Println("vaga reservada no posto: ", vagaFeita.ID_posto)
 		fmt.Println("latitude: ", vagaFeita.Latitude)
 		fmt.Println("longitude: ", vagaFeita.Longitude)
+		fmt.Println("*******************")
 		// fmt.Println("posicao na fila: ", vagaFeita.Posicao_na_fila)
 	}
 }
@@ -512,8 +563,10 @@ func atualizarPosicaoVeiculoNaFila() {
 		posto_selecionado = &dados.Posto
 
 		if !veiculo.IsDeslocandoAoPosto {
+			fmt.Println("*************************")
 			fmt.Printf("Posto %s: Veículo %s removido da fila.\n", posto_selecionado.ID, veiculo.ID)
 			modelo.CarregarBateria(&veiculo, posto_selecionado)
+			fmt.Println("*************************")
 		}
 	} else {
 		fmt.Printf("\n\nO posto foi desconectado! O veículo não está mais se deslocando para lá!\n\n")

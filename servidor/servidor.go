@@ -50,33 +50,13 @@ var (
 	mutex                 sync.Mutex
 )
 
-// var (
-// 	id          string
-// 	latitude    float64
-// 	longitude   float64
-// 	selecionado *modelo.Posto
-// )
-
-// var opcao int
-
-// var goroutineCriada bool
-// var ticker *time.Ticker
-
-// var arquivoPostosCriados bool = false
-
 func main() {
-	// http.HandleFunc("/posto", handler)
-	// http.HandleFunc("/listar", listarPostos)
-	// http.HandleFunc("/cadastrar-veiculo", cadastrarVeiculo)
-	// http.HandleFunc("/posto-recomendado", postoRecomendado)
-	// http.HandleFunc("/reservar-vaga", reservarVagaPosto)
-	// http.HandleFunc("/pagamento", reservarVagaPosto)
-
 	// cria um listener TCP na porta 9090, ouvindo em todas as interfaces
 
-	// listener, erro := net.Listen("tcp", "localhost:8080")
+	listener, erro := net.Listen("tcp", "localhost:8080")
 
-	listener, erro := net.Listen("tcp", "0.0.0.0:9090")
+	//listener, erro := net.Listen("tcp", "0.0.0.0:9090")
+
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
 		os.Exit(1)
@@ -85,18 +65,6 @@ func main() {
 
 	fmt.Println("Servidor iniciado em localhost:8080")
 	// inicializar()
-
-	// if postos != nil {
-	// 	if !goroutineCriada {
-	// 		ticker = time.NewTicker(5 * time.Second) // temporizador faz com que chame a função a cada 5 segundos
-	// 		go func() {
-	// 			for range ticker.C {
-	// 				atualizarFilas()
-	// 			}
-	// 		}()
-	// 		goroutineCriada = true
-	// 	}
-	// }
 
 	for {
 		conexao, erro := listener.Accept()
@@ -130,6 +98,7 @@ func cliente(conexao net.Conn) {
 		for i := range conexoes_clientes {
 			c := conexoes_clientes[i]
 			if conexao == c {
+				salvarNoArquivo("veiculos.json")
 				conexoes_clientes = append(conexoes_clientes[:i], conexoes_clientes[i+1:]...)
 				fmt.Println("cliente desconectado, conexoes de postos restantes: ", conexoes_clientes)
 			}
@@ -569,6 +538,11 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 		fmt.Println("Erro ao decodificar JSON")
 		return
 	}
+	pag := modelo.Pagamento{
+		Veiculo:  pagamentoJson.Veiculo.ID,
+		Valor:    pagamentoJson.Valor,
+		ID_posto: pagamentoJson.ID_posto,
+	}
 
 	// procura o posto pelo ID
 	var conexaoPosto net.Conn
@@ -599,6 +573,15 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 			return
 		}
 
+		for i := range veiculos {
+			if veiculos[i].ID == pagamentoJson.Veiculo.ID {
+				if veiculos[i].Pagamentos == nil {
+					veiculos[i].Pagamentos = []modelo.Pagamento{}
+				}
+				veiculos[i].Pagamentos = append(veiculos[i].Pagamentos, pag)
+			}
+		}
+
 		res := Requisicao{
 			Comando: "reservar-vaga",
 			Dados:   req,
@@ -619,7 +602,9 @@ func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
 		return
 	}
 
-	fmt.Println("veiculo recebido", attPos.Veiculo)
+	fmt.Println("--------------------------------------------")
+	fmt.Printf("veiculo recebido: \nID: %s \nLatitude: %.2f \nLongitude %.2f \nBateria em %.2f \nEsta carregando: %t \nEsta se deslocando: %t\n\n", attPos.Veiculo.ID, attPos.Veiculo.Latitude, attPos.Veiculo.Longitude, attPos.Veiculo.Bateria, attPos.Veiculo.IsCarregando, attPos.Veiculo.IsDeslocandoAoPosto)
+	fmt.Println("--------------------------------------------")
 
 	// procura o posto pelo ID
 	var conexaoPosto net.Conn
@@ -693,8 +678,10 @@ func postoRecomendado(conexao net.Conn, req Requisicao) {
 	}
 
 	if postoRecomendado != nil {
+		fmt.Println("****************************")
 		fmt.Printf("Posto recomendado: %s\n", postoRecomendado.ID)
 		fmt.Printf("Posição na fila: %d\n", posicaoFila)
+		fmt.Println("****************************")
 		recomendadoResponse := modelo.RecomendadoResponse{
 			ID_posto:  postoRecomendado.ID,
 			Latitude:  postoRecomendado.Latitude,

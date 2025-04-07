@@ -16,7 +16,7 @@ type Veiculo struct {
 	Bateria             float64
 	IsCarregando        bool
 	IsDeslocandoAoPosto bool
-	Pagamentos          *[]PagamentoJson
+	Pagamentos          []Pagamento
 }
 
 func NovoVeiculo(id string, inicialLat float64, inicialLong float64) Veiculo {
