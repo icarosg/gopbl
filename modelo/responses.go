@@ -12,6 +12,12 @@ type PagamentoJson struct {
 	ID_posto string  `json:"id_posto"`
 }
 
+type Pagamento struct {
+	Veiculo  string `json:"id_veiculo"`
+	Valor    float64 `json:"valor"`
+	ID_posto string  `json:"id_posto"`
+}
+
 // type estruturaVeiculo struct {
 // 	Latitude            float64 `json:"latitude"`
 // 	Longitude           float64 `json:"longitude"`

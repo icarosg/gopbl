@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"net"
+
 	//"net/http"
 	"os"
 	"sync"
@@ -37,6 +38,7 @@ var (
 	postosMutex                sync.Mutex
 	postos                     []*modelo.Posto // Slice para armazenar todos os postos
 	veiculos                   []*modelo.Veiculo
+	postosParaArquivo          []*modelo.Posto
 	conexoes_postos            []net.Conn
 	conexoes_clientes          []net.Conn
 	dicionarioConexoesClientes = make(map[string]net.Conn)
@@ -48,11 +50,12 @@ var (
 	mutex                 sync.Mutex
 )
 
-var arquivoPostosCriados bool = false
-
 func main() {
-	// cria um listener TCP na porta 8080
+	// cria um listener TCP na porta 9090, ouvindo em todas as interfaces
+
 	listener, erro := net.Listen("tcp", "localhost:8080")
+
+	//listener, erro := net.Listen("tcp", "0.0.0.0:9090")
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
 		os.Exit(1)
@@ -60,7 +63,7 @@ func main() {
 	defer listener.Close()
 
 	fmt.Println("Servidor iniciado em localhost:8080")
-	inicializar()
+	// inicializar()
 
 	for {
 		conexao, erro := listener.Accept()
@@ -84,9 +87,6 @@ func main() {
 			conexoes_clientes = append(conexoes_clientes, conexao)
 			go cliente(conexao)
 		}
-
-		//go atualizarFilas()
-		//go menu()
 	}
 
 }
@@ -97,7 +97,7 @@ func cliente(conexao net.Conn) {
 		for i := range conexoes_clientes {
 			c := conexoes_clientes[i]
 			if conexao == c {
-				//salvarNoArquivo("veiculos.json")
+				salvarNoArquivo("veiculos.json")
 				conexoes_clientes = append(conexoes_clientes[:i], conexoes_clientes[i+1:]...)
 				fmt.Println("cliente desconectado, conexoes de postos restantes: ", conexoes_clientes)
 			}
@@ -196,10 +196,7 @@ func posto(conexao net.Conn) {
 				fmt.Println("erro ao decodificar resposta")
 			}
 			postos = append(postos, postoRecebido)
-		case "cadastrar-posto":
-			testSalvarPosto(req, conexao)
-		case "postos-salvos":
-			enviarPostosSalvos(conexao)
+
 		case "reservar-vaga-retornoPosto":
 			//envia a resposta para o veículo
 			var dados *modelo.RetornarVagaJson
@@ -273,6 +270,13 @@ func posto(conexao net.Conn) {
 			} else {
 				fmt.Println("O veículo está desconectado! Não foi possível enviar a resposta!")
 			}
+
+		case "listarPostosDoArquivo":
+			listarPostosDoArquivo(conexao)
+
+		case "cadastrar-posto":
+			fmt.Println("teste")
+			cadastrarPosto(req)
 		}
 	}
 }
@@ -293,137 +297,6 @@ func getQtdClientes() int {
 	mutex.Lock()
 	defer mutex.Unlock()
 	return qtdClientesConectados
-}
-
-func inicializar() {
-	if !arquivoPostosCriados {
-		salvarPostoNoArquivo("postos.json")
-		arquivoPostosCriados = true
-	}
-}
-
-func enviarPostosSalvos(conexao net.Conn) {
-	postosMutex.Lock()
-	defer postosMutex.Unlock()
-
-	nomeArquivo := "postos.json"
-	//mapPosto := map[string]modelo.Posto{}
-
-	arquivo, err := os.Open(nomeArquivo)
-	if err != nil {
-		fmt.Println("erro ao abrir arquivo pra carregar os postos")
-		return
-	}
-	defer arquivo.Close()
-
-	var postosArquivo []*modelo.Posto
-	var postosExistentesArquivo []*modelo.Posto
-	decoder := json.NewDecoder(arquivo)
-	if err := decoder.Decode(&postosArquivo); err != nil {
-		fmt.Println("erro ao decodificar JSON do arquivo dos postos")
-		return
-	}
-
-	for i := range postosArquivo {
-		posto := postosArquivo[i]
-		if posto != nil {
-			postosExistentesArquivo = append(postosExistentesArquivo, posto)
-		}
-	}
-	postosJSON, err := json.Marshal(postosExistentesArquivo)
-	if err != nil {
-		fmt.Println("erro ao codificar os postos salvos no arquivo para JSON antes de enviar para o posto")
-		return
-	}
-	req := Requisicao{
-		Comando: "postos-salvos",
-		Dados:   postosJSON,
-	}
-	//fmt.Println(postosExistentesArquivo)
-	//time.Sleep(1 * time.Second) // Espera 1 segundo para garantir que a resposta seja recebida
-	teste := enviarResposta(conexao, req)
-	if teste != nil {
-		fmt.Println("deu pau akl oh")
-	}
-}
-
-func testSalvarPosto(req Requisicao, conexao net.Conn) {
-	postosMutex.Lock()
-	defer postosMutex.Unlock()
-
-	nomeArquivo := "postos.json"
-
-	var postoRecebido *modelo.Posto
-	fmt.Println("tentando decodificar")
-	erro := json.Unmarshal(req.Dados, &postoRecebido)
-	if erro != nil {
-		fmt.Println("erro ao decodificar resposta")
-	}
-	fmt.Println("Posto recebido aki:", postoRecebido)
-	postos = append(postos, postoRecebido)
-	salvarPostoNoArquivo(nomeArquivo)
-
-	reqi := Requisicao{
-		Comando: "cadastrou",
-	}
-	e := enviarResposta(conexao, reqi)
-	if e != nil {
-		fmt.Println("erro ao enviar resposta")
-	}
-}
-
-func salvarPostoNoArquivo(nome string) {	
-	nomeArquivo := nome
-
-	postosExistentes := make(map[string]modelo.Posto)
-
-	// verifica se o arquivo já existe
-	if _, err := os.Stat(nomeArquivo); err == nil {
-		arquivo, err := os.Open(nomeArquivo)
-		if err != nil {
-			log.Fatalf("Erro ao abrir o arquivo: %s", err)
-		}
-		defer arquivo.Close()
-
-		var postosSalvos []modelo.Posto
-		if err := json.NewDecoder(arquivo).Decode(&postosSalvos); err != nil {
-			log.Printf("Erro ao ler JSON existente. Criando novo arquivo: %s", err)
-		}
-
-		// add a lista
-		for _, v := range postosSalvos {
-			postosExistentes[v.ID] = v
-		}
-	}
-
-	// add os novos veiculos
-	for _, v := range postos {
-		postosExistentes[v.ID] = *v
-	}
-
-	postosAtualizados := make([]modelo.Posto, 0, len(postosExistentes))
-	for _, v := range postosExistentes {
-		postosAtualizados = append(postosAtualizados, v)
-	}
-
-	postosJSON, err := json.MarshalIndent(postosAtualizados, "", "    ")
-	if err != nil {
-		log.Fatalf("Erro ao converter postos para JSON: %s", err)
-	}
-
-	// abre o arquivo para escrita (substitui o conteúdo antigo)
-	arquivo, err := os.Create(nomeArquivo)
-	if err != nil {
-		log.Fatalf("Erro ao criar o arquivo: %s", err)
-	}
-	defer arquivo.Close()
-
-	_, err = arquivo.Write(postosJSON)
-	if err != nil {
-		log.Fatalf("Erro ao escrever no arquivo: %s", err)
-	}
-
-	//log.Println("Veículos salvos em", nomeArquivo)
 }
 
 func salvarNoArquivo(nome string) {
@@ -483,8 +356,64 @@ func salvarNoArquivo(nome string) {
 	//log.Println("Veículos salvos em", nomeArquivo)
 }
 
-func cadastrarVeiculo(req Requisicao, conexao net.Conn) {	
+func postoNoArquivo(nome string) {
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
 
+	nomeArquivo := nome
+
+	postosExistentes := make(map[string]modelo.Posto)
+
+	// verifica se o arquivo já existe
+	if _, err := os.Stat(nomeArquivo); err == nil {
+		arquivo, err := os.Open(nomeArquivo)
+		if err != nil {
+			log.Fatalf("Erro ao abrir o arquivo: %s", err)
+		}
+		defer arquivo.Close()
+
+		var postosSalvos []modelo.Posto
+		if err := json.NewDecoder(arquivo).Decode(&postosSalvos); err != nil {
+			log.Printf("Erro ao ler JSON existente. Criando novo arquivo: %s", err)
+		}
+
+		// add a lista
+		for _, p := range postosSalvos {
+			postosExistentes[p.ID] = p
+		}
+	}
+
+	// add os novos veiculos
+	for _, p := range postosParaArquivo {
+		postosExistentes[p.ID] = *p
+	}
+
+	postosAtualizados := make([]modelo.Posto, 0, len(postosExistentes))
+	for _, p := range postosExistentes {
+		postosAtualizados = append(postosAtualizados, p)
+	}
+
+	postosJSON, err := json.MarshalIndent(postosAtualizados, "", "    ")
+	if err != nil {
+		log.Fatalf("Erro ao converter veículos para JSON: %s", err)
+	}
+
+	// abre o arquivo para escrita (substitui o conteúdo antigo)
+	arquivo, err := os.Create(nomeArquivo)
+	if err != nil {
+		log.Fatalf("Erro ao criar o arquivo: %s", err)
+	}
+	defer arquivo.Close()
+
+	_, err = arquivo.Write(postosJSON)
+	if err != nil {
+		log.Fatalf("Erro ao escrever no arquivo: %s", err)
+	}
+
+	//log.Println("Veículos salvos em", nomeArquivo)
+}
+
+func cadastrarVeiculo(req Requisicao, conexao net.Conn) {
 	// decodifica o JSON do body da req
 	var veiculo modelo.Veiculo
 	erro := json.Unmarshal(req.Dados, &veiculo)
@@ -549,6 +478,55 @@ func listarVeiculos(conexao net.Conn) {
 	}
 }
 
+
+
+func listarPostosDoArquivo(conexao net.Conn) {
+	postosMutex.Lock()
+	defer postosMutex.Unlock()
+
+	nomeArquivo := "postos.json"
+	postosExistentes := make(map[string]modelo.Posto)
+
+	// verifica se o arquivo já existe
+	if _, err := os.Stat(nomeArquivo); err == nil {
+		arquivo, err := os.Open(nomeArquivo)
+		if err != nil {
+			log.Fatalf("Erro ao abrir o arquivo: %s", err)
+		}
+		defer arquivo.Close()
+
+		var postosSalvos []modelo.Posto
+		if err := json.NewDecoder(arquivo).Decode(&postosSalvos); err != nil {
+			log.Printf("Erro ao ler JSON existente.")
+		}
+
+		// add a lista
+		for _, p := range postosSalvos {
+			postosExistentes[p.ID] = p
+		}
+
+		postosAtualizados := make([]modelo.Posto, 0, len(postosExistentes))
+		for _, p := range postosExistentes {
+			postosAtualizados = append(postosAtualizados, p)
+		}
+
+		postosJSON, erro := json.Marshal(postosAtualizados)
+		if erro != nil {
+			fmt.Println("Erro ao codificar os veículos")
+			return
+		}
+
+		response := Requisicao{
+			Comando: "listar-postosNoArquivo",
+			Dados:   postosJSON,
+		}
+
+		enviarResposta(conexao, response)
+	} else {
+		fmt.Println("Arquivo de postos inexistente.")
+	}
+}
+
 func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 	// postosMutex.Lock()
 	// defer postosMutex.Unlock()
@@ -560,6 +538,11 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 	if erro != nil {
 		fmt.Println("Erro ao decodificar JSON")
 		return
+	}
+	pag := modelo.Pagamento{
+		Veiculo:  pagamentoJson.Veiculo.ID,
+		Valor:    pagamentoJson.Valor,
+		ID_posto: pagamentoJson.ID_posto,
 	}
 
 	// procura o posto pelo ID
@@ -590,13 +573,16 @@ func reservarVagaPosto(conexao net.Conn, requisicao Requisicao) {
 			fmt.Printf("Erro ao converter veículo e conexão para JSON: %v\n", err)
 			return
 		}
-		
-		// for i := range veiculos{
-		// 	if veiculos[i].ID == pagamentoJson.Veiculo.ID {
-		// 		veiculos[i].Pagamentos = append(veiculos[i].Pagamentos, pagamentoJson)				
-		// 	}
-		// }
-		
+
+		for i := range veiculos {
+			if veiculos[i].ID == pagamentoJson.Veiculo.ID {
+				if veiculos[i].Pagamentos == nil {
+					veiculos[i].Pagamentos = []modelo.Pagamento{}
+				}
+				veiculos[i].Pagamentos = append(veiculos[i].Pagamentos, pag)
+			}
+		}
+
 		res := Requisicao{
 			Comando: "reservar-vaga",
 			Dados:   req,
@@ -616,9 +602,11 @@ func atualizarPosicaoVeiculoNaFila(conexao net.Conn, requisicao Requisicao) {
 		fmt.Println("Erro ao decodificar JSON")
 		return
 	}
+
 	fmt.Println("--------------------------------------------")
 	fmt.Printf("veiculo recebido: \nID: %s \nLatitude: %.2f \nLongitude %.2f \nBateria em %.2f \nEsta carregando: %t \nEsta se deslocando: %t\n\n", attPos.Veiculo.ID, attPos.Veiculo.Latitude, attPos.Veiculo.Longitude, attPos.Veiculo.Bateria, attPos.Veiculo.IsCarregando, attPos.Veiculo.IsDeslocandoAoPosto)
 	fmt.Println("--------------------------------------------")
+
 	// procura o posto pelo ID
 	var conexaoPosto net.Conn
 	for i := range postos {
@@ -787,6 +775,23 @@ func listarPostos(conexao net.Conn) {
 	enviarResposta(conexao, response)
 }
 
+func cadastrarPosto(req Requisicao) {
+	// decodifica o JSON do body da req
+	var posto modelo.Posto
+	erro := json.Unmarshal(req.Dados, &posto)
+
+	if erro != nil {
+		fmt.Println("Erro ao cadastrar o posto")
+		return
+	}
+
+	postosParaArquivo = append(postosParaArquivo, &posto)
+
+	postoNoArquivo("postos.json")
+
+	fmt.Println("Posto cadastrado")
+}
+
 func enviarResposta(conexao net.Conn, resposta Requisicao) error {
 	dados, erro := json.Marshal(resposta)
 	if erro != nil {
@@ -832,10 +837,6 @@ func receberResposta(conexao net.Conn) json.RawMessage {
 	case "adicionar-conexao":
 		return response.Dados
 	case "get-posto":
-		return response.Dados
-	case "postos-salvos":
-		return response.Dados
-	case "add-fila":
 		return response.Dados
 	}
 
