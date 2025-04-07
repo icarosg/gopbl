@@ -56,6 +56,7 @@ func main() {
 	listener, erro := net.Listen("tcp", "localhost:8080")
 
 	//listener, erro := net.Listen("tcp", "0.0.0.0:9090")
+
 	if erro != nil {
 		fmt.Println("Erro ao iniciar o servidor:", erro)
 		os.Exit(1)
@@ -477,8 +478,6 @@ func listarVeiculos(conexao net.Conn) {
 		fmt.Println("Arquivo de veículos inexistente.")
 	}
 }
-
-
 
 func listarPostosDoArquivo(conexao net.Conn) {
 	postosMutex.Lock()
