@@ -59,9 +59,9 @@ A comunicação entre os componentes é realizada através de sockets TCP, utili
 git clone https://github.com/icarosg/gopbl.git
 cd gopbl
 ```
-2. Construa as imagens:
+2. Construa as imagens (utilizar o comando para construir as imagens definidas no compose):
 ```
-utilizar o comando docker-compose build para construir as imagens definidas no compose
+docker-compose build
 ```
 3. Execute o sistema usando Docker Compose:
 ```
